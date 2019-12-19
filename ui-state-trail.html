@@ -1,0 +1,145 @@
+<!--
+MIT License
+
+Copyright (c) 2019 hotNipi
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the 'Software'), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+-->
+<script type='text/javascript'>
+    RED.nodes.registerType('ui_statetrail',{
+        category: 'dashboard',
+        color: 'rgb( 63, 173, 181)',
+        defaults: {
+            group: {type: 'ui_group', required:true},
+            order: {value: 0},
+            width: {
+                value: 0,
+                validate: function(v) {
+                    var valid = true
+                    var width = v||0;
+                    var currentGroup = $('#node-input-group').val()|| this.group;
+                    var groupNode = RED.nodes.node(currentGroup);
+                    valid = !groupNode || +width <= +groupNode.width;
+                    $('#node-input-size').toggleClass('input-error',!valid);
+                    return valid;
+                }},
+            height: {value: 0},
+            name: {value: ''},
+            label:{value: ''},
+            blur:{value:false},         
+            colorLine: {value: '#ff9900'},          
+            colorFromTheme:{value:true},
+            stroke:{value:2, required: true},
+            pointcount:{val:8, required: true}
+                    
+        },
+        inputs:1,
+        outputs:0,
+        icon: 'uilevel.png',
+        paletteLabel: 'state-trail',
+        label: function() {
+            return this.name||'State-trail';
+        },
+        oneditprepare: function() {
+            $('#node-input-size').elementSizer({
+                width: '#node-input-width',
+                height: '#node-input-height',
+                group: '#node-input-group'
+            });
+           
+            if (this.blur === undefined) {
+                $("#node-input-blur").prop('checked', false);
+            }
+            if (this.pointcount === undefined) {
+                this.pointcount = 8;
+                $('#node-input-pointcount').val('8');
+            }
+            if (this.stroke === undefined) {
+                this.stroke = 2;
+                $('#node-input-stroke').val('2');
+            }
+            $('#node-input-colorFromTheme').change(function() {                
+                if (this.checked == true) {                                 
+                    $('#node-input-colorLine').hide();                  
+                    $('#node-input-colorLineSpan').hide();                  
+                }
+                else {                   
+                    $('#node-input-colorLine').show();
+                    $('#node-input-colorLineSpan').show();
+                }
+            });
+          
+        },
+        oneditsave: function (){
+           // $('input[name=foo]').attr('checked', this.colorFromTheme);
+        }
+    });
+</script>
+<script type='text/x-red' data-template-name='ui_statetrail'>
+    <div class='form-row' id='template-row-group'>
+        <label for='node-input-group'><i class='fa fa-table'></i> Group</span></label>
+        <input type='text' id='node-input-group'>
+    </div>
+    <div class='form-row' id='template-row-size'>
+        <label><i class='fa fa-object-group'></i> Size</span></label>
+        <input type='hidden' id='node-input-width'>
+        <input type='hidden' id='node-input-height'>
+        <button class='editor-button' id='node-input-size'></button>
+    </div>      
+</br>    
+    <div class='form-row' id='node-input-linecolor'>
+        <label for='node-input-colorFromTheme' style='padding-top:6px; padding-bottom:6px'><i class='fa fa-paint-brush'></i> Line color</span></label>
+        <input type="checkbox" id="node-input-colorFromTheme" checked style="display:inline-block; width:auto; vertical-align:baseline; margin-right:5px;">Use theme color
+        <span for='node-input-colorLine' id='node-input-colorLineSpan' style='margin-left:20px;'>Custom color</span>
+        <input type='color' id='node-input-colorLine' style='width:80px'/>
+    </div>
+    <div class='form-row' id='node-input-lineblur'>
+        <label for='node-input-blur'><i class='fa fa-paint-brush'></i> Line style</span></label>
+        <input type="checkbox" id="node-input-blur" checked style="display:inline-block; width:auto; vertical-align:baseline; margin-right:5px;">Use glow       
+    </div>
+</br>
+    <div class='form-row'>
+        <label for='node-input-stroke'><i class='fa fa-gear'></i> Stroke width</label>
+        <span for='node-input-stroke'</span>
+        <input type='number' id='node-input-stroke' min='1' max='6' value='2' size='1' style='width:60px' >     
+    </div>
+    <div class='form-row'>
+        <label for='node-input-pointcount'><i class='fa fa-gear'></i> Points per unit</label>
+        <span for='node-input-pointcount'</span>
+        <input type='number' id='node-input-pointcount' min='2' max='24' value='8' size='1' style='width:60px' >     
+    </div>
+</br>
+    <div class='form-row'>
+        <label for='node-input-name'><i class='icon-tag'></i> Name</label>
+        <input type='text' id='node-input-name' placeholder='Name'>
+    </div>
+</script>
+<script type='text/x-red' data-help-name='ui_statetrail'>
+    <p>Node-RED dashboard widget to show small trail of value history near some numeric value
+    <p>Configurable options:
+    <li>Color of line</li>
+    <li>Glow (on/off)</li>
+    <li>Stroke width (1 ... 6)</li>
+    <li>Amount of datapoints per unit. (2 ... 24)</li>
+    <p style='margin-left: 30px'><code>unit</code> represents <code>1x1 Widget Size</code> in dashboard Site configuration</p>
+ 
+<h3>Input</h3>
+
+ The <code>msg.payload</code> should carry single numeric value. 
+</script>
