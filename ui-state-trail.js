@@ -42,14 +42,19 @@ module.exports = function (RED) {
 					<linearGradient id="statra_gradi_{{unique}}" x2="100%" y2="0%">
 					
 					</linearGradient>	
-				</defs>					
-				<rect id="statra_{{unique}}" x="`+config.stripe.x+`" y="`+config.stripe.y+`" width="`+config.exactwidth+`" height="`+config.stripe.height+`" style="stroke:none"; ${gradient}/>	
+				</defs>
+				<text ng-if="${config.height > 1}">
+					<tspan id="statra_label_{{unique}}" class="txt-{{unique}}" text-anchor="middle" dominant-baseline="middle" x=`+config.exactwidth/2+` y="25%">
+						`+config.label+`
+					</tspan>
+				</text>	
+				<rect id="statra_{{unique}}" x="`+config.stripe.x+`" y="`+config.stripe.y+`%" width="`+config.exactwidth+`" height="`+config.stripe.height+`" style="stroke:none"; ${gradient}/>	
 			
-				<text ng-repeat="x in [].constructor(${config.tickcount}) track by $index" id=statra_tickval_{{unique}}_{{$index}} 
+				<text ng-repeat="x in [].constructor(${config.tickmarks}) track by $index" id=statra_tickval_{{unique}}_{{$index}} 
 				class="txt-{{unique}} small" text-anchor="middle" dominant-baseline="baseline"
 				 y="95%"></text>
 				
-				 <line ng-repeat="x in [].constructor(${config.tickcount}) track by $index" id=statra_tick_{{unique}}_{{$index}} visibility="hidden" x1="0" y1="${config.stripe.y+config.stripe.height+3}" x2="0" y2="${config.stripe.y+config.stripe.height+9}" style="stroke:currentColor;stroke-width:1" />
+				 <line ng-repeat="x in [].constructor(${config.tickmarks}) track by $index" id=statra_tick_{{unique}}_{{$index}} visibility="hidden" x1="0" y1="${config.stripe.y+config.stripe.height+3}" x2="0" y2="${config.stripe.y+config.stripe.height+9}" style="stroke:currentColor;stroke-width:1" />
 				
 			</svg>`			
 		
@@ -85,6 +90,7 @@ module.exports = function (RED) {
 			var generateGradient = null;
 			var generateTicks = null;
 			var getColor = null;
+			var formatTime = null;
 	
 			if (checkConfig(node, config)) {
 				
@@ -200,10 +206,31 @@ module.exports = function (RED) {
 					var hours = d.getHours(); 
 					var minutes = d.getMinutes(); 
 					var seconds = d.getSeconds(); 
-					 
-					var t = hours.toString().padStart(2, '0') + ':' +  
+					var t 
+					 switch (config.timeformat) {
+						case 'HH:mm:ss':
+							t = hours.toString().padStart(2, '0') + ':' +  
 							minutes.toString().padStart(2, '0') + ':' +  
-							seconds.toString().padStart(2, '0');					
+							seconds.toString().padStart(2, '0');
+							break;
+						case 'HH:mm':
+							t = hours.toString().padStart(2, '0') + ':' +  
+							minutes.toString().padStart(2, '0');
+							break;
+						case 'mm:ss':
+							t = minutes.toString().padStart(2, '0') + ':' +  
+							seconds.toString().padStart(2, '0');
+							break;	
+						case 'mm':
+							t = minutes.toString().padStart(2, '0');
+							break;	
+						case 'ss':
+							t = seconds.toString().padStart(2, '0');
+							break;	
+						default:
+							break;
+					 }
+										
 					return t
 				}
 				
@@ -216,8 +243,8 @@ module.exports = function (RED) {
 					var po
 					var t
 					var total = config.max - config.min
-					var step = (total / (config.tickcount-1))
-					for (let i = 0; i < config.tickcount; i++) {
+					var step = (total / (config.tickmarks-1))
+					for (let i = 0; i < config.tickmarks; i++) {
 						t = config.storage[0].time + (step*i)						 					
 						po = getPosition(t,config.min,config.max) 
 						o = {x:po,v:formatTime(t),id:i}					
@@ -233,19 +260,21 @@ module.exports = function (RED) {
 				if(config.width == 0){ config.width = parseInt(group.config.width) || 1}
 				if(config.height == 0) {config.height = parseInt(group.config.height) || 1}
 				config.width = parseInt(config.width)
-				config.height = parseInt(config.height)
+				config.height = parseInt(config.height) > 2 ? 2 : parseInt(config.height)
 				config.exactwidth = parseInt(site.sizes.sx * config.width + site.sizes.cx * (config.width-1)) - 12;		
 				config.exactheight = parseInt(site.sizes.sy * config.height + site.sizes.cy * (config.height-1)) - 12;
-				config.states = [{state:"a",col:'orange'},{state:"b",col:'yellow'},{state:"c",col:'green'}]
-				config.stripe = {height:config.exactheight/2,x:0,y:0,left:10,right:90}
-				config.period = 50000
-				config.tickcount = 4
+				
+				var sh = (site.sizes.sy/2)-site.sizes.cy-site.sizes.gy //config.height == 1 ? 0.5*config.exactheight :  0.25*config.exactheight
+				var sy = config.height == 1 ? 0 : 50
+				config.stripe = {height:sh,x:0,y:sy,left:10,right:90}
+				config.period = parseInt(config.periodLimit) * parseInt(config.periodLimitUnit) * 1000
+				config.tickmarks = config.tickmarks || 4
 				
 				config.min = new Date().getTime() - config.period
 				config.max = new Date().getTime() 
 				
 				config.storage = []		
-					
+				
 				var html = HTML(config);		
 				
 				done = ui.addWidget({
@@ -276,7 +305,7 @@ module.exports = function (RED) {
 						
 						var result = generateGradient()
 						var times = generateTicks()
-						console.log('[ui-state-trail]: result', result)
+
 						
 						
 						var fem = {payload:{stops:result,ticks:times}}

@@ -21,6 +21,49 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 -->
+
+<script type='text/x-red' data-template-name='ui_statetrail'>
+    <div class='form-row' id='template-row-group'>
+        <label for='node-input-group'><i class='fa fa-table'></i> Group</span></label>
+        <input type='text' id='node-input-group'>
+    </div>
+    <div class='form-row' id='template-row-size'>
+        <label><i class='fa fa-object-group'></i> Size</span></label>
+        <input type='hidden' id='node-input-width'>
+        <input type='hidden' id='node-input-height'>
+        <button class='editor-button' id='node-input-size'></button>
+    </div>      
+</br>
+<div class='form-row' id='node-input-el-label'>
+    <label for='node-input-label'><i class='icon-tag'></i> Label</label>
+    <input type='text' id='node-input-label' placeholder='State trail'>
+</div>    
+<div class="form-row" id="period-show">
+    <label for="node-input-periodLimit">Period</label>
+    <label for="node-input-periodLimit" style="width:auto">last</label>
+    <input type="text" id="node-input-periodLimit" style="width:60px;">
+    <select id="node-input-periodLimitUnit" style="width:100px;">
+        <option value="1">seconds</option>
+        <option value="60">minutes</option>
+        <option value="3600">hours</option>
+    </select>
+</div>
+<div class="form-row" id="time-label-show">
+    <label for="node-input-timeformat">Time Format</label>
+    <input type="text" id="node-input-timeformat" style="width:100px;">
+    <label for='node-input-tickmarks' style='width:33px'>Ticks</label>
+    <input type='number' id='node-input-tickmarks' min='2' max='12' value='4' size='1' style='width:47px' >
+</div>
+
+<div class="form-row node-input-rule-container-row">
+    <ol id="node-input-rule-container"></ol>
+</div>
+</br>
+<div class='form-row'>
+    <label for='node-input-name'><i class='icon-tag'></i> Name</label>
+    <input type='text' id='node-input-name' placeholder='Name'>
+</div>
+</script>
 <script type='text/javascript'>
     RED.nodes.registerType('ui_statetrail',{
         category: 'dashboard',
@@ -42,16 +85,16 @@ SOFTWARE.
             height: {value: 0},
             name: {value: ''},
             label:{value: ''},
-            blur:{value:false},         
-            colorLine: {value: '#ff9900'},          
-            colorFromTheme:{value:true},
-            stroke:{value:2, required: true},
-            pointcount:{val:8, required: true}
+            states:[{state:true,col:"#999999",t:"bool"},{state:false,col:"#999999",t:"bool"}],
+            periodLimit: {value: 1, validate:RED.validators.number(), required:true},
+            periodLimitUnit: {value: '3600', required:true},
+            timeformat: {value: 'HH:mm:ss'},
+            tickmarks:{val:4, required: true}
                     
         },
         inputs:1,
         outputs:0,
-        icon: 'uilevel.png',
+        icon: 'statetrail.png',
         paletteLabel: 'state-trail',
         label: function() {
             return this.name||'State-trail';
@@ -62,84 +105,133 @@ SOFTWARE.
                 height: '#node-input-height',
                 group: '#node-input-group'
             });
+
+            if (this.tickmarks === undefined) {
+                this.tickmarks = 4;
+                $('#node-input-tickmarks').val('4');
+            }
+
            
-            if (this.blur === undefined) {
-                $("#node-input-blur").prop('checked', false);
-            }
-            if (this.pointcount === undefined) {
-                this.pointcount = 8;
-                $('#node-input-pointcount').val('8');
-            }
-            if (this.stroke === undefined) {
-                this.stroke = 2;
-                $('#node-input-stroke').val('2');
-            }
-            $('#node-input-colorFromTheme').change(function() {                
-                if (this.checked == true) {                                 
-                    $('#node-input-colorLine').hide();                  
-                    $('#node-input-colorLineSpan').hide();                  
-                }
-                else {                   
-                    $('#node-input-colorLine').show();
-                    $('#node-input-colorLineSpan').show();
+            var oval = $("#node-input-timeformat").val();
+            if (!oval) { $("#node-input-timeformat").val("HH:mm:ss"); }
+            var odef = 'HH:mm:ss';
+            if (oval === "HH:mm:ss") { odef = oval; }
+            if (oval === "HH:mm") { odef = oval; }
+            if (oval === "mm:ss") { odef = oval; }
+            if (oval === "mm") { odef = oval; }
+            if (oval === "ss") { odef = oval; }            
+            var ohms = {value:"HH:mm:ss", label:"HH:mm:ss", hasValue:false};
+            var ohm = {value:"HH:mm", label:"HH:mm", hasValue:false};
+            var oms = {value:"mm:ss", label:"mm:ss", hasValue:false};
+            var om = {value:"mm", label:"mm", hasValue:false};
+            var os = {value:"ss", label:"ss", hasValue:false};
+           
+            $("#node-input-timeformat").typedInput({
+                default: odef,
+                types:[ ohms, ohm, oms, om, os]
+            });
+
+
+            $("#node-input-rule-container").editableList({
+                removable:true,
+                addItem: function(container, index, rule) {
+                    container.css({
+                        overflow: 'hidden',
+                        whiteSpace: 'nowrap'
+                    });
+                    var row = $('<div/>').appendTo(container);
+                   
+                    var propField
+                    var colorField
+
+                    propField = $('<input/>',{class:"node-input-rule-state-value",style:"width:120px;",type:"text" })
+                        .appendTo(row)
+                        .typedInput({types:['bool','str','num']});                       
+
+                    colorField = $('<input/>',{value:rule.col, class:"node-input-rule-state-color",style:"width:80px;",type:"color"})                    
+                        .appendTo(row)               
+                   
+                    propField.typedInput('value',rule.state);
+                    propField.typedInput('type',rule.t);
+                  
                 }
             });
-          
+
+            if (!this.states) {
+                var rbt = {state:true,col:"#009933",t:'bool'};
+                var rbf = {state:false,col:"#999999",t:'bool'};
+
+                this.states = [rbt,rbf];
+            }
+            for (var i=0; i<this.states.length; i++) {
+                var rule = this.states[i];
+                $("#node-input-rule-container").editableList('addItem',rule);
+            }                     
         },
         oneditsave: function (){
-           // $('input[name=foo]').attr('checked', this.colorFromTheme);
+            $("#node-input-timeformat").val($("#node-input-timeformat").typedInput('type'));
+            var states = $("#node-input-rule-container").editableList('items');
+            var node = this;
+           
+            node.states= [];
+           var convert = function(rule){
+               if(rule.t === 'str'){
+                   return rule
+               }
+               if(rule.t === 'bool'){
+                   rule.state = rule.state == "true" ? true : false
+               }
+               if(rule.t == 'num'){
+                   rule.state = parseFloat(rule.state)
+               }
+               return rule
+           }
+            
+            states.each(function(i) {
+                var rule = $(this);
+                var st = rule.find(".node-input-rule-state-value").typedInput('value')                
+                var tp = rule.find(".node-input-rule-state-value").typedInput('type')
+                var co = rule.find(".node-input-rule-state-color").val();
+                var r = convert({state:st,col:co,t:tp})
+                node.states.push(r);
+               
+            });
+           // console.log(node.states)
         }
     });
 </script>
-<script type='text/x-red' data-template-name='ui_statetrail'>
-    <div class='form-row' id='template-row-group'>
-        <label for='node-input-group'><i class='fa fa-table'></i> Group</span></label>
-        <input type='text' id='node-input-group'>
-    </div>
-    <div class='form-row' id='template-row-size'>
-        <label><i class='fa fa-object-group'></i> Size</span></label>
-        <input type='hidden' id='node-input-width'>
-        <input type='hidden' id='node-input-height'>
-        <button class='editor-button' id='node-input-size'></button>
-    </div>      
-</br>    
-    <div class='form-row' id='node-input-linecolor'>
-        <label for='node-input-colorFromTheme' style='padding-top:6px; padding-bottom:6px'><i class='fa fa-paint-brush'></i> Line color</span></label>
-        <input type="checkbox" id="node-input-colorFromTheme" checked style="display:inline-block; width:auto; vertical-align:baseline; margin-right:5px;">Use theme color
-        <span for='node-input-colorLine' id='node-input-colorLineSpan' style='margin-left:20px;'>Custom color</span>
-        <input type='color' id='node-input-colorLine' style='width:80px'/>
-    </div>
-    <div class='form-row' id='node-input-lineblur'>
-        <label for='node-input-blur'><i class='fa fa-paint-brush'></i> Line style</span></label>
-        <input type="checkbox" id="node-input-blur" checked style="display:inline-block; width:auto; vertical-align:baseline; margin-right:5px;">Use glow       
-    </div>
-</br>
-    <div class='form-row'>
-        <label for='node-input-stroke'><i class='fa fa-gear'></i> Stroke width</label>
-        <span for='node-input-stroke'</span>
-        <input type='number' id='node-input-stroke' min='1' max='6' value='2' size='1' style='width:60px' >     
-    </div>
-    <div class='form-row'>
-        <label for='node-input-pointcount'><i class='fa fa-gear'></i> Points per unit</label>
-        <span for='node-input-pointcount'</span>
-        <input type='number' id='node-input-pointcount' min='2' max='24' value='8' size='1' style='width:60px' >     
-    </div>
-</br>
-    <div class='form-row'>
-        <label for='node-input-name'><i class='icon-tag'></i> Name</label>
-        <input type='text' id='node-input-name' placeholder='Name'>
-    </div>
-</script>
-<script type='text/x-red' data-help-name='ui_statetrail'>
-    <p>Node-RED dashboard widget to show small trail of value history near some numeric value
-    <p>Configurable options:
-    <li>Color of line</li>
-    <li>Glow (on/off)</li>
-    <li>Stroke width (1 ... 6)</li>
-    <li>Amount of datapoints per unit. (2 ... 24)</li>
-    <p style='margin-left: 30px'><code>unit</code> represents <code>1x1 Widget Size</code> in dashboard Site configuration</p>
- 
-<h3>Input</h3>
 
- The <code>msg.payload</code> should carry single numeric value. 
+<script type='text/x-red' data-help-name='ui_statetrail'>
+    <h3>Description</h3>
+    <p>Node-RED dashboard widget. Gantt type chart to visualize state changes over time period.<p>
+</br>
+    <h3>Configuration</h3>
+    <h2>Label</h2>
+    <p>To show label configure widget height to 2 units. 
+  
+    <h2>Period</h2>
+    <p>Time period. If configured to long period, keep input rate low. Too much may harm performance significantly.
+        
+
+    <h2>Time format and Ticks</h2>
+    <p>Choose format of time and count of tick marks.
+     
+    <h2>States</h2>
+    <p>Configure states. There is 3 types available for states: string, number and boolean. 
+        States can be configured with mixed types - true (boolean) and "true" (string) treated as different states. 
+
+ 
+</br>
+    <h3>Input</h3>
+    <dl class="message-properties">
+        <dt>payload
+            <span class="property-type">Boolean|String|Number</span>           
+        </dt>
+        
+        <dd> 
+                msg.payload should carry one of configured state. In case of state not found for payload, widget shows period in black. 
+        </dd>
+                
+    </dl>
+    
 </script>
