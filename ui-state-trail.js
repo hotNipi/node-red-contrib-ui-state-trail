@@ -271,7 +271,8 @@ module.exports = function (RED) {
 				
 				var sh = (site.sizes.sy/2)-site.sizes.cy-site.sizes.gy //config.height == 1 ? 0.5*config.exactheight :  0.25*config.exactheight
 				var sy = config.height == 1 ? 0 : 50
-				config.stripe = {height:sh,x:0,y:sy,left:10,right:90}
+				var edge = 30 * 100 / config.exactwidth
+				config.stripe = {height:sh,x:0,y:sy,left:edge,right:(100-edge)}
 				config.period = parseInt(config.periodLimit) * parseInt(config.periodLimitUnit) * 1000
 				config.tickmarks = config.tickmarks || 4
 				
