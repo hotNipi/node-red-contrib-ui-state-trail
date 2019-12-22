@@ -259,7 +259,6 @@ module.exports = function (RED) {
 					return ret
 				}
 				
-				
 				var group = RED.nodes.getNode(config.group);
 				var site = getSiteProperties();				
 				if(config.width == 0){ config.width = parseInt(group.config.width) || 1}
@@ -269,15 +268,15 @@ module.exports = function (RED) {
 				config.exactwidth = parseInt(site.sizes.sx * config.width + site.sizes.cx * (config.width-1)) - 12;		
 				config.exactheight = parseInt(site.sizes.sy * config.height + site.sizes.cy * (config.height-1)) - 12;
 				
-				var sh = (site.sizes.sy/2)-site.sizes.cy-site.sizes.gy //config.height == 1 ? 0.5*config.exactheight :  0.25*config.exactheight
+				var sh = (site.sizes.sy/2)-site.sizes.cy-site.sizes.gy 
 				var sy = config.height == 1 ? 0 : 50
-				var edge = 30 * 100 / config.exactwidth
+				var edge = Math.max(config.timeformat.length,6) * 4 * 100 / config.exactwidth
 				config.stripe = {height:sh,x:0,y:sy,left:edge,right:(100-edge)}
 				config.period = parseInt(config.periodLimit) * parseInt(config.periodLimitUnit) * 1000
 				config.tickmarks = config.tickmarks || 4
 				
-				config.min = new Date().getTime() - config.period
 				config.max = new Date().getTime() 
+				config.min = config.max - config.period
 				
 				config.storage = []		
 				
