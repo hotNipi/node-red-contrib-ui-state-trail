@@ -10,7 +10,7 @@ Node-RED dashboard widget. Gantt type chart to visualize state changes over time
 To show label configure widget height to 2 units. 
   
 ### Period
-Time period. If configured to long period, keep input rate low. Too much may harm performance significantly.
+Time period. If configured to long period, keep input rate low. Too much data may harm performance significantly.
         
 
 ### Time format and Ticks

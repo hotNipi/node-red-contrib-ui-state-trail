@@ -95,8 +95,13 @@ module.exports = function (RED) {
 			if (checkConfig(node, config)) {
 				
 				checkPayload = function (input){
-					var t = new Date().getTime()
-					var ret = {state:input,time:t}					
+					var ret = null
+					for (let i = 0; i < config.states.length; i++) {
+						if(config.states[i].state === input){
+							var t = new Date().getTime()
+							ret = {state:input,time:t}
+						}
+					}										
 					return ret
 				}
 				store = function (val){	
@@ -295,19 +300,14 @@ module.exports = function (RED) {
 						}
 						var checked = checkPayload(msg.payload)												
 						if(checked === null){
-							return
+							return msg
 						}
-						var changed = store(checked)
-						
+						var changed = store(checked)						
 						if(changed === false){						
 							return msg
-						}												
-						
+						}
 						var result = generateGradient()
-						var times = generateTicks()
-
-						
-						
+						var times = generateTicks()						
 						var fem = {payload:{stops:result,ticks:times}}
 						return { msg:fem };
 					},
@@ -349,21 +349,20 @@ module.exports = function (RED) {
 								if(tick){								
 									$(tick).text(times[i].v);
 									$(tick).attr('x',times[i].x+"%");
-									
-																		
 								}
-								
 							}
-							
 					   }								
 						$scope.$watch('msg', function (msg) {
 							if (!msg) {								
 								return;
 							}
 							if(msg.payload){
-								//console.log(msg.payload)							
-								updateGradient(msg.payload.stops)
-								updateTicks(msg.payload.ticks)	
+								if(msg.payload.stops){
+									updateGradient(msg.payload.stops)
+								}
+								if(msg.payload.ticks){
+									updateTicks(msg.payload.ticks)	
+								}
 							}						
 																			
 						});
