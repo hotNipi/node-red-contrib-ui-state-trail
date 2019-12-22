@@ -17,9 +17,9 @@ Time period. If configured to long period, keep input rate low. Too much data ma
 Choose format of time and count of tick marks.
      
 ### States
-Configure states. There is 3 types available for states: string, number and boolean. 
-States can be configured with mixed types - <code>true</code> (boolean) and <code>"true"</code> (string) treated as different states. 
+Configure at least 2 states. Type of state can be <code>string</code>, <code>number</code> or <code>boolean</code>.  
+States can be configured with mixing the types. States <code>true</code> (boolean) and <code>"true"</code> (string) treated as different states. 
 
 ### Input
         
-<code>msg.payload</code> should carry one of configured state. In case of state not found for payload, widget shows period in black. 
+<code>msg.payload</code> should carry one of configured states. 
