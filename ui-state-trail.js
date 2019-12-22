@@ -300,16 +300,15 @@ module.exports = function (RED) {
 						}
 						var checked = checkPayload(msg.payload)												
 						if(checked === null){
-							return msg
+							return {}
 						}
 						var changed = store(checked)						
 						if(changed === false){						
-							return msg
+							return {}
 						}
-						var result = generateGradient()
-						var times = generateTicks()						
-						var fem = {payload:{stops:result,ticks:times}}
-						return { msg:fem };
+
+						msg.payload = {stops:generateGradient(),ticks:generateTicks()}
+						return { msg };
 					},
 					
 					initController: function ($scope) {																		
