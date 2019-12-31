@@ -1,5 +1,13 @@
 # node-red-contrib-state-trail
 
+[![NPM version][npm-image]][npm-url]
+[![CodeFactor](https://www.codefactor.io/repository/github/hotnipi/node-red-contrib-ui-state-trail/badge)](https://www.codefactor.io/repository/github/hotnipi/node-red-contrib-ui-state-trail)
+![npm](https://img.shields.io/npm/dm/node-red-contrib-ui-state-trail)
+
+[npm-image]: http://img.shields.io/npm/v/node-red-contrib-ui-state-trail.svg
+[npm-url]: https://www.npmjs.com/package/node-red-contrib-ui-state-trail
+
+
 ## Description
 ![node-red-contrib-ui-state-trail.JPG](images/node-red-contrib-ui-state-trail.JPG)
 
