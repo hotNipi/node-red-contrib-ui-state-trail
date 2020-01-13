@@ -28,6 +28,9 @@ Choose format of time and count of tick marks.
 Configure at least 2 states. Type of state can be <code>string</code>, <code>number</code> or <code>boolean</code>.  
 States can be configured with mixing the types. States <code>true</code> (boolean) and <code>"true"</code> (string) treated as different states. 
 
+### Blank label
+Text to show when there is not yet enough data to display the chart. 
+
 ### Input
         
 <code>msg.payload</code> should carry one of configured states. 

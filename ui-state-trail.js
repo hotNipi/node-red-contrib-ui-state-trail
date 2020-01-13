@@ -48,6 +48,11 @@ module.exports = function (RED) {
 						`+config.label+`
 					</tspan>
 				</text>	
+				<text ng-if="${config.blanklabel != ""}" font-style="italic">
+					<tspan id="statra_blank_{{unique}}" class="txt-{{unique}}" text-anchor="middle" dominant-baseline="hanging" x=`+config.exactwidth/2+` y="`+config.stripe.y+`%">
+						`+config.blanklabel+`
+					</tspan>
+				</text>	
 				<rect id="statra_{{unique}}" x="`+config.stripe.x+`" y="`+config.stripe.y+`%" width="`+config.exactwidth+`" height="`+config.stripe.height+`" style="stroke:none"; ${gradient}/>	
 			
 				<text ng-repeat="x in [].constructor(${config.tickmarks}) track by $index" id=statra_tickval_{{unique}}_{{$index}} 
@@ -268,7 +273,7 @@ module.exports = function (RED) {
 				config.exactwidth = parseInt(site.sizes.sx * config.width + site.sizes.cx * (config.width-1)) - 12;		
 				config.exactheight = parseInt(site.sizes.sy * config.height + site.sizes.cy * (config.height-1)) - 12;
 				
-				var sh = (site.sizes.sy/2)-site.sizes.cy-site.sizes.gy 
+				var sh = (site.sizes.sy/2)-site.sizes.cy
 				var sy = config.height == 1 ? 0 : 50
 				var edge = Math.max(config.timeformat.length,6) * 4 * 100 / config.exactwidth
 				config.stripe = {height:sh,x:0,y:sy,left:edge,right:(100-edge)}
@@ -276,7 +281,8 @@ module.exports = function (RED) {
 				config.tickmarks = config.tickmarks || 4
 				
 				config.max = new Date().getTime() 
-				config.min = config.max - config.period
+				config.min = config.max - config.period	
+						
 				
 				config.storage = []		
 				
@@ -316,6 +322,12 @@ module.exports = function (RED) {
 						$scope.svgns = 'http://www.w3.org/2000/svg';				
 						
 						var updateGradient = function (stops){
+							var bl = document.getElementById("statra_blank_"+$scope.unique);
+							if(bl){
+								var v = stops.length < 2 ?'visible' : 'hidden'
+								bl.setAttribute('visibility',v)
+							}
+							
 	 						var gradient = document.getElementById("statra_gradi_"+$scope.unique);
 							var stop
 							if(gradient){

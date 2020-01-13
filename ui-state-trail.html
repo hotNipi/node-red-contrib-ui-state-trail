@@ -59,6 +59,10 @@ SOFTWARE.
     <ol id="node-input-rule-container"></ol>
 </div>
 </br>
+<div class='form-row' id='node-input-bl-label'>
+    <label for='node-input-blanklabel'><i class='icon-tag'></i> Blank label</label>
+    <input type='text' id='node-input-blanklabel' placeholder='Waiting data'>
+</div> 
 <div class='form-row'>
     <label for='node-input-name'><i class='icon-tag'></i> Name</label>
     <input type='text' id='node-input-name' placeholder='Name'>
@@ -89,7 +93,8 @@ SOFTWARE.
             periodLimit: {value: 1, validate:RED.validators.number(), required:true},
             periodLimitUnit: {value: '3600', required:true},
             timeformat: {value: 'HH:mm:ss'},
-            tickmarks:{val:4, required: true}
+            tickmarks:{val:4, required: true},
+            blanklabel:{value: ''}
                     
         },
         inputs:1,
@@ -110,7 +115,10 @@ SOFTWARE.
                 this.tickmarks = 4;
                 $('#node-input-tickmarks').val('4');
             }
-
+            if (this.blanklabel === undefined) {
+                this.blanklabel = '';
+                $('#node-input-blanklabel').val('');
+            }
            
             var oval = $("#node-input-timeformat").val();
             if (!oval) { $("#node-input-timeformat").val("HH:mm:ss"); }
@@ -219,8 +227,10 @@ SOFTWARE.
     <h2>States</h2>
     <p>Configure at least 2 states. Type of state can be <code>string</code>, <code>number</code> or <code>boolean</code>.  
         States can be configured with mixing the types. States <code>true</code> (boolean) and <code>"true"</code> (string) treated as different states. 
-
- 
+    
+    <h2>Blank label</h2>
+    <p>Text to show when there is not yet enough data to display the chart.
+</br>
 </br>
     <h3>Input</h3>
     <dl class="message-properties">
