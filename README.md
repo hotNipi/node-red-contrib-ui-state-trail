@@ -33,4 +33,10 @@ Text to show when there is not yet enough data to display the chart.
 
 ### Input
         
-<code>msg.payload</code> should carry one of configured states. 
+<code>msg.payload</code> should carry single value of one of configured states
+<code>msg.payload = true</code> 
+
+If you want to use the widget to show historical data, you need to pass in every state together with its timestamp. 
+<code>msg.payload = {state:true,timestamp:1579362774639}</code>
+
+To clear the data, send an empty array <code>msg.payload = []</code> 

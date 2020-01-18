@@ -235,12 +235,24 @@ SOFTWARE.
     <h3>Input</h3>
     <dl class="message-properties">
         <dt>payload
-            <span class="property-type">Boolean|String|Number</span>           
+            <span class="property-type">Boolean|String|Number|Object|Array</span>           
         </dt>
         
         <dd> 
-                msg.payload should carry one of configured states. 
+            msg.payload should carry single value of one of configured states.
+            <code>msg.payload = true</code>
         </dd>
+        <br>
+        <dd>    
+            If you want to use the widget to show historical data, you need to pass in every state together with its timestamp.
+            <code>msg.payload = {state:true,timestamp:1579362774639}</code>  
+        </dd>
+        <br>
+        <dd>    
+            To clear the the data, send an empty array
+            <code>msg.payload = []</code>  
+        </dd>
+
                 
     </dl>
     

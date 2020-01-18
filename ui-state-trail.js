@@ -96,41 +96,59 @@ module.exports = function (RED) {
 			var generateTicks = null;
 			var getColor = null;
 			var formatTime = null;
+			var validType = null;
 	
 			if (checkConfig(node, config)) {
 				
 				checkPayload = function (input){
 					var ret = null
-					for (let i = 0; i < config.states.length; i++) {
-						if(config.states[i].state === input){
-							var t = new Date().getTime()
-							ret = {state:input,time:t}
+					if(Array.isArray(input)){
+						return []
+					}					
+					if(typeof input === 'object' && input !== null){
+						if(input.hasOwnProperty('state') && input.hasOwnProperty("timestamp")){
+							if(validType(input.state)){								
+								ret = {state:input.state,time:input.timestamp}
+							}
 						}
-					}										
+					}
+					else{
+						if(validType(input)){
+							ret = {state:input,time:new Date().getTime()}
+						}
+					}													
 					return ret
 				}
+				validType = function (input) {
+					for(var i = 0;i<config.states.length;i++){
+						if(config.states[i].state === input){							
+							return true
+						}
+					}
+					return false
+				}
+
 				store = function (val){	
-					var changed = false				
+					var changed = false						
+					if(Array.isArray(val)){
+						config.storage = []
+						config.max = new Date().getTime() 
+						config.min = config.max - config.period
+						return true
+					}			
 					if(config.storage.length == 0){
 						config.storage.push(val)
 						changed = true
 					}					
 					else{
-						var time = val.time - config.period
-						var filtered = config.storage.filter(el => el.time > time);
-						config.storage = filtered
-						
-						if(config.storage.length == 0){
-							config.storage.push(val)
-							changed = true
-						}
-						else{
-							if(config.storage[config.storage.length - 1].state != val.state){
-								config.storage.push(val)
-								changed = true
-							}
-						}
-																		
+						var temp = [...config.storage]
+						temp = temp.filter(el => el.time != val.time)
+						temp.push(val)						
+						temp = temp.sort((a, b) => a.time - b.time)
+						var time = temp[temp.length -1].time - config.period
+						temp = temp.filter(el => el.time > time);
+						config.storage = temp
+						changed = true																			
 					}					
 					config.min = config.storage[0].time
 					config.max = config.storage[config.storage.length - 1].time		
@@ -273,7 +291,7 @@ module.exports = function (RED) {
 				config.exactwidth = parseInt(site.sizes.sx * config.width + site.sizes.cx * (config.width-1)) - 12;		
 				config.exactheight = parseInt(site.sizes.sy * config.height + site.sizes.cy * (config.height-1)) - 12;
 				
-				var sh = (site.sizes.sy/2)-site.sizes.cy
+				var sh = (site.sizes.sy/2)-site.sizes.cy 
 				var sy = config.height == 1 ? 0 : 50
 				var edge = Math.max(config.timeformat.length,6) * 4 * 100 / config.exactwidth
 				config.stripe = {height:sh,x:0,y:sy,left:edge,right:(100-edge)}
@@ -281,8 +299,7 @@ module.exports = function (RED) {
 				config.tickmarks = config.tickmarks || 4
 				
 				config.max = new Date().getTime() 
-				config.min = config.max - config.period	
-						
+				config.min = config.max - config.period
 				
 				config.storage = []		
 				
@@ -322,12 +339,6 @@ module.exports = function (RED) {
 						$scope.svgns = 'http://www.w3.org/2000/svg';				
 						
 						var updateGradient = function (stops){
-							var bl = document.getElementById("statra_blank_"+$scope.unique);
-							if(bl){
-								var v = stops.length < 2 ?'visible' : 'hidden'
-								bl.setAttribute('visibility',v)
-							}
-							
 	 						var gradient = document.getElementById("statra_gradi_"+$scope.unique);
 							var stop
 							if(gradient){
@@ -367,6 +378,7 @@ module.exports = function (RED) {
 							if (!msg) {								
 								return;
 							}
+							console.log(msg)
 							if(msg.payload){
 								if(msg.payload.stops){
 									updateGradient(msg.payload.stops)
