@@ -57,8 +57,18 @@ SOFTWARE.
 
 <div class="form-row node-input-rule-container-row">
     <ol id="node-input-rule-container"></ol>
+    <div id="error-ruleinfo">
+        <p style="color:red; position:relative; top:-20px; left:50px">All states must be unique!
+    </div>
 </div>
+
 </br>
+<div class='form-row' id='node-input-persistance'>
+    <label for='node-input-persist'><i class='icon-tag'></i> Initial state</label>
+    <input type="checkbox" id="node-input-persist" 
+            style="display:inline-block; width:auto; vertical-align:baseline; 
+            margin-right:5px;margin-left:5px;">Restore from saved state
+    </div>
 <div class='form-row' id='node-input-bl-label'>
     <label for='node-input-blanklabel'><i class='icon-tag'></i> Blank label</label>
     <input type='text' id='node-input-blanklabel' placeholder='Waiting data'>
@@ -69,6 +79,7 @@ SOFTWARE.
 </div>
 </script>
 <script type='text/javascript'>
+ 
     RED.nodes.registerType('ui_statetrail',{
         category: 'dashboard',
         color: 'rgb( 63, 173, 181)',
@@ -89,11 +100,17 @@ SOFTWARE.
             height: {value: 0},
             name: {value: ''},
             label:{value: ''},
-            states:[{state:true,col:"#999999",t:"bool"},{state:false,col:"#999999",t:"bool"}],
+            states:{value:[{state:true,col:"#009933",t:"bool"},{state:false,col:"#999999",t:"bool"}],
+                    validate: function(v) {
+                        var unique = [...new Set(v.map(s => s.state))]
+                        var valid = v.length > 1 && v.length == unique.length                         
+                        return valid
+                    }},
             periodLimit: {value: 1, validate:RED.validators.number(), required:true},
             periodLimitUnit: {value: '3600', required:true},
             timeformat: {value: 'HH:mm:ss'},
             tickmarks:{val:4, required: true},
+            persist:{val:false, required: true},
             blanklabel:{value: ''}
                     
         },
@@ -104,7 +121,28 @@ SOFTWARE.
         label: function() {
             return this.name||'State-trail';
         },
-        oneditprepare: function() {
+        oneditprepare: function() {            
+            function getColor(idx) {
+                var colors = ['#0099ff','#33cccc','#00ff99','#33cc33','#ffff00','#ff9933','#ff0066','#cc33ff','#3366ff']
+                if(idx > colors.length-1){
+                    return colors[Math.floor(Math.random()*colors.length)]
+                }
+                return colors[idx]
+            }
+            function defaultRule(idx){
+                return {state:true,col:getColor(idx),t:"bool"}
+            }
+            function ruleInfo(flag){
+                if(flag){
+                    $('#error-ruleinfo').show(); 
+                }
+                else{
+                    $('#error-ruleinfo').hide();
+                }
+               
+            }
+            $('#error-ruleinfo').hide();
+            
             $('#node-input-size').elementSizer({
                 width: '#node-input-width',
                 height: '#node-input-height',
@@ -119,6 +157,10 @@ SOFTWARE.
                 this.blanklabel = '';
                 $('#node-input-blanklabel').val('');
             }
+            
+            if (this.persist === undefined) {
+                $("#node-input-persist").prop('checked', false);
+            } 
            
             var oval = $("#node-input-timeformat").val();
             if (!oval) { $("#node-input-timeformat").val("HH:mm:ss"); }
@@ -142,7 +184,14 @@ SOFTWARE.
 
             $("#node-input-rule-container").editableList({
                 removable:true,
-                addItem: function(container, index, rule) {
+                header: $("<div>").css({padding:"6px"}).append($.parseHTML(`
+                    <div style='width:120px; text-align:center; display: inline-grid'><b>State</b></div> 
+                    <div style='width:80px; text-align:center; display: inline-grid'><b>Color</b></div>  
+                    `)),
+                addItem: function(container, index, rule) {                    
+                    if (!rule.hasOwnProperty('state')) {
+                        rule = defaultRule(index)
+                    }               
                     container.css({
                         overflow: 'hidden',
                         whiteSpace: 'nowrap'
@@ -156,12 +205,17 @@ SOFTWARE.
                         .appendTo(row)
                         .typedInput({types:['bool','str','num']});                       
 
-                    colorField = $('<input/>',{value:rule.col, class:"node-input-rule-state-color",style:"width:80px;",type:"color"})                    
+                    colorField = $('<input/>',{value:rule.col, class:"node-input-rule-state-color",style:"width:80px; margin-left:8px;",type:"color"})                    
                         .appendTo(row)               
                    
                     propField.typedInput('value',rule.state);
                     propField.typedInput('type',rule.t);
-                  
+                    propField.typedInput().on('change', function(type, value) {ruleInfo(false)});
+                    $('.red-ui-editableList-border').toggleClass('input-error',false);                  
+                },
+                removeItem: function(data) {
+                    $('.red-ui-editableList-border').toggleClass('input-error',($("#node-input-rule-container").editableList('items').length < 2 ));
+                    ruleInfo(false)
                 }
             });
 
@@ -174,9 +228,13 @@ SOFTWARE.
             for (var i=0; i<this.states.length; i++) {
                 var rule = this.states[i];
                 $("#node-input-rule-container").editableList('addItem',rule);
-            }                     
+            }
+            $('.red-ui-editableList-border').toggleClass('input-error',($("#node-input-rule-container").editableList('items').length < 2 ));
+            var us = [...new Set(this.states.map(s => s.state))]
+            ruleInfo(us.length != this.states.length)         
         },
         oneditsave: function (){
+            
             $("#node-input-timeformat").val($("#node-input-timeformat").typedInput('type'));
             var states = $("#node-input-rule-container").editableList('items');
             var node = this;

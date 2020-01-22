@@ -24,7 +24,8 @@ SOFTWARE.
 
 
 module.exports = function (RED) {
-	function HTML(config) {			
+	function HTML(config) {
+		var data = JSON.stringify(config.initial);			
 		var styles = String.raw`
 		<style>
 			.txt-{{unique}} {	
@@ -37,7 +38,7 @@ module.exports = function (RED) {
 		</style>`
 		var gradient = String.raw`fill="url(#statra_gradi_{{unique}})"`		
 		var layout = String.raw`		
-			<svg preserveAspectRatio="xMidYMid meet" id="statra_svg_{{unique}}" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+			<svg preserveAspectRatio="xMidYMid meet" id="statra_svg_{{unique}}" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg" ng-init='init(`+data+`)'>
 				<defs>
 					<linearGradient id="statra_gradi_{{unique}}" x2="100%" y2="0%">
 					
@@ -97,6 +98,9 @@ module.exports = function (RED) {
 			var getColor = null;
 			var formatTime = null;
 			var validType = null;
+			var storage = null;
+			var storeInContext = null;
+			var ctx = node.context()
 	
 			if (checkConfig(node, config)) {
 				
@@ -128,32 +132,37 @@ module.exports = function (RED) {
 					return false
 				}
 
-				store = function (val){	
-					var changed = false						
+				store = function (val){										
 					if(Array.isArray(val)){
-						config.storage = []
+						storage = []
 						config.max = new Date().getTime() 
 						config.min = config.max - config.period
-						return true
+						storeInContext()
+						return						
 					}			
-					if(config.storage.length == 0){
-						config.storage.push(val)
-						changed = true
+					if(storage.length == 0){
+						storage.push(val)						
 					}					
 					else{
-						var temp = [...config.storage]
-						temp = temp.filter(el => el.time != val.time)
-						temp.push(val)						
+						var temp = [...storage]
+						temp = temp.filter(el => el.time != val.time)						
+						temp.push(val)											
 						temp = temp.sort((a, b) => a.time - b.time)
+						var idx = temp.length - 1
+						if(idx > 1){
+							if(temp[idx-2].state === temp[idx-1].state){
+								temp.splice(idx-1,1)
+							}
+						}
 						var time = temp[temp.length -1].time - config.period
 						temp = temp.filter(el => el.time > time);
-						config.storage = temp
-						changed = true																			
-					}					
-					config.min = config.storage[0].time
-					config.max = config.storage[config.storage.length - 1].time		
-
-					return changed
+						storage = temp																									
+					}
+										
+					config.min = storage[0].time
+					config.insidemin = storage.length < 3 ? config.min :  storage[1].time
+					config.max = storage[storage.length - 1].time	
+					storeInContext()					
 				}				
 
 				getSiteProperties = function(){
@@ -200,31 +209,31 @@ module.exports = function (RED) {
 				
 				generateGradient = function(){
 					var ret = []
-					if(config.storage.length < 2){
+					if(storage.length < 2){
 						return ret
 					}
-					var o = {p:0,c:getColor(config.storage[0].state),a:0}
+					var o = {p:0,c:getColor(storage[0].state),a:0}
 					ret.push(o)
-					o = {p:config.stripe.left,c:getColor(config.storage[0].state),a:1}
+					o = {p:config.stripe.left,c:getColor(storage[0].state),a:1}
 					ret.push(o)			
 					var i
 					var po
-					po = getPosition(config.storage[0].time,config.min,config.max)
-					for(i = 1;i<config.storage.length-1;i++){						
+					po = getPosition(storage[1].time,config.insidemin,config.max)
+					for(i = 1;i<storage.length-1;i++){						
 						if(isNaN(po)){
 							continue
 						}					 	
-						o = {p:po,c:getColor(config.storage[i == 0 ? i : i-1].state),a:1}
+						o = {p:po,c:getColor(storage[i-1].state),a:1}
 						ret.push(o)						
-						o = {p:po,c:getColor(config.storage[i].state),a:1}
+						o = {p:po,c:getColor(storage[i].state),a:1}
 						ret.push(o)
-						po = getPosition(config.storage[i].time,config.min,config.max)
+						po = getPosition(storage[i+1].time,config.insidemin,config.max)
 					}
-					o = {p:config.stripe.right,c:getColor(config.storage[config.storage.length-2].state),a:1}
+					o = {p:config.stripe.right,c:getColor(storage[storage.length-2].state),a:1}
 					ret.push(o) 
-					o = {p:config.stripe.right,c:getColor(config.storage[config.storage.length-1].state),a:1}
+					o = {p:config.stripe.right,c:getColor(storage[storage.length-1].state),a:1}
 					ret.push(o) 
-					o = {p:100,c:getColor(config.storage[config.storage.length-1].state),a:0}
+					o = {p:100,c:getColor(storage[storage.length-1].state),a:0}
 					ret.push(o) 
 					
 					return ret
@@ -264,7 +273,7 @@ module.exports = function (RED) {
 				
 				generateTicks = function(){
 					var ret = []
-					if(config.storage.length < 2){
+					if(storage.length < 2){
 						return ret
 					}
 					var o 
@@ -273,13 +282,20 @@ module.exports = function (RED) {
 					var total = config.max - config.min
 					var step = (total / (config.tickmarks-1))
 					for (let i = 0; i < config.tickmarks; i++) {
-						t = config.storage[0].time + (step*i)						 					
+						t = storage[0].time + (step*i)						 					
 						po = getPosition(t,config.min,config.max) 
 						o = {x:po,v:formatTime(t),id:i}					
 						ret.push(o) 						
-					}
-					
+					}					
 					return ret
+				}
+				
+				storeInContext = function (force){
+					if(force == true || config.persist == true){
+						ctx.set('stateTrailStorage',storage)
+						ctx.set('stateTrailMax',config.max)
+						ctx.set('stateTrailMin',config.min)	
+					}
 				}
 				
 				var group = RED.nodes.getNode(config.group);
@@ -296,12 +312,18 @@ module.exports = function (RED) {
 				var edge = Math.max(config.timeformat.length,6) * 4 * 100 / config.exactwidth
 				config.stripe = {height:sh,x:0,y:sy,left:edge,right:(100-edge)}
 				config.period = parseInt(config.periodLimit) * parseInt(config.periodLimitUnit) * 1000
-				config.tickmarks = config.tickmarks || 4
+				config.tickmarks = config.tickmarks || 4				
 				
-				config.max = new Date().getTime() 
-				config.min = config.max - config.period
+				storage = config.persist ? ctx.get('stateTrailStorage') || [] : []	
+				config.max = config.persist ? ctx.get('stateTrailMax') || new Date().getTime() : new Date().getTime()
+				config.min = config.persist ? ctx.get('stateTrailMin') || (config.max - config.period) : (config.max - config.period)
+				config.insidemin = storage.length < 3 ? config.min :  storage[1].time				
+				storeInContext(true)
+
+/* 				var contextStores = RED.settings.get('contextStorage')
+            	console.log(contextStores)  */
 				
-				config.storage = []		
+				config.initial = {stops:generateGradient(),ticks:generateTicks()}
 				
 				var html = HTML(config);		
 				
@@ -314,39 +336,50 @@ module.exports = function (RED) {
 					format: html,					
 					templateScope: "local",
 					emitOnlyNewValues: false,
-					forwardInputMessages: true,
-					storeFrontEndInputAsState: true,				
+					forwardInputMessages: true,					
+					storeFrontEndInputAsState: true,
 					
 					beforeEmit: function (msg) {
 						if(msg.payload === undefined){
 							return 
 						}
-						var checked = checkPayload(msg.payload)												
-						if(checked === null){
+						var validated = checkPayload(msg.payload)												
+						if(validated === null){
 							return {}
 						}
-						var changed = store(checked)						
-						if(changed === false){						
-							return {}
-						}
-
+						store(validated)
+						
 						msg.payload = {stops:generateGradient(),ticks:generateTicks()}
 						return { msg };
 					},
 					
 					initController: function ($scope) {																		
 						$scope.unique = $scope.$eval('$id')
-						$scope.svgns = 'http://www.w3.org/2000/svg';				
+						$scope.svgns = 'http://www.w3.org/2000/svg';
+						$scope.timeout = null
+						
+						$scope.init = function(data){
+							update(data)
+						}
+						
+						var update = function(data){
+							var gradient = document.getElementById("statra_gradi_"+$scope.unique);
+							if(!gradient){
+								$scope.timeout = setTimeout(update.bind(null, data), 40);
+								return
+							}
+							$scope.timeout = null
+							updateGradient(data.stops)
+							updateTicks(data.ticks)
+						}
 						
 						var updateGradient = function (stops){
 	 						var gradient = document.getElementById("statra_gradi_"+$scope.unique);
 							var stop
-							if(gradient){
-								
+							if(gradient){								
 								while(gradient.childNodes.length > 0){
 									gradient.removeChild(gradient.firstChild)
-								}
-								
+								}								
 								for (let i = 0; i < stops.length; i++) {
 									stop = document.createElementNS($scope.svgns, 'stop');
 									stop.setAttribute('offset', stops[i].p+"%");
@@ -356,6 +389,7 @@ module.exports = function (RED) {
 								}								
 							}							
 						}	
+						
 						var updateTicks = function (times){
 							$("[id*='statra_tickval_"+$scope.unique+"']").text('') 
 							$("[id*='statra_tick_"+$scope.unique+"']").attr('visibility','hidden')
@@ -373,22 +407,22 @@ module.exports = function (RED) {
 									$(tick).attr('x',times[i].x+"%");
 								}
 							}
-					   }								
+					   	}								
+						
 						$scope.$watch('msg', function (msg) {
 							if (!msg) {								
 								return;
-							}
-							console.log(msg)
+							}							
 							if(msg.payload){
-								if(msg.payload.stops){
-									updateGradient(msg.payload.stops)
-								}
-								if(msg.payload.ticks){
-									updateTicks(msg.payload.ticks)	
-								}
-							}						
-																			
+								update(msg.payload)
+							}																			
 						});
+						$scope.$on('$destroy', function() {
+							if($scope.timeout != null) {
+								clearTimeout($scope.timeout)
+								$scope.timeout = null						
+							}
+						}); 
 						
 					}
 				});
@@ -398,7 +432,7 @@ module.exports = function (RED) {
 			console.log(e);
 		}
 		node.on("close", function () {
-			if (done) {
+			if (done) {				
 				done();
 			}
 		});
