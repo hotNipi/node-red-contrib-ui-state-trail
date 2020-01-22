@@ -123,7 +123,7 @@ SOFTWARE.
         },
         oneditprepare: function() {            
             function getColor(idx) {
-                var colors = ['#0099ff','#33cccc','#00ff99','#33cc33','#ffff00','#ff9933','#ff0066','#cc33ff','#3366ff']
+                var colors = ['#009933','#adad85','#ff0000','#009999','#cccc00','#ff33cc','#cc6600','#99ff66','#660033']
                 if(idx > colors.length-1){
                     return colors[Math.floor(Math.random()*colors.length)]
                 }
@@ -211,7 +211,7 @@ SOFTWARE.
                     propField.typedInput('value',rule.state);
                     propField.typedInput('type',rule.t);
                     propField.typedInput().on('change', function(type, value) {ruleInfo(false)});
-                    $('.red-ui-editableList-border').toggleClass('input-error',false);                  
+                    $('.red-ui-editableList-border').toggleClass('input-error',($("#node-input-rule-container").editableList('items').length < 2 ));                  
                 },
                 removeItem: function(data) {
                     $('.red-ui-editableList-border').toggleClass('input-error',($("#node-input-rule-container").editableList('items').length < 2 ));
