@@ -100,6 +100,9 @@ module.exports = function (RED) {
 			var validType = null;
 			var storage = null;
 			var storeInContext = null;
+			var prepareStorage = null;
+			var stroageSpace = null;
+			var showInfo = null;
 			var ctx = node.context()
 	
 			if (checkConfig(node, config)) {
@@ -161,7 +164,8 @@ module.exports = function (RED) {
 										
 					config.min = storage[0].time
 					config.insidemin = storage.length < 3 ? config.min :  storage[1].time
-					config.max = storage[storage.length - 1].time	
+					config.max = storage[storage.length - 1].time
+					showInfo()	
 					storeInContext()					
 				}				
 
@@ -290,12 +294,51 @@ module.exports = function (RED) {
 					return ret
 				}
 				
-				storeInContext = function (force){
-					if(force == true || config.persist == true){
-						ctx.set('stateTrailStorage',storage)
-						ctx.set('stateTrailMax',config.max)
-						ctx.set('stateTrailMin',config.min)	
+				prepareStorage = function(){
+					var contextStores = RED.settings.get('contextStorage')
+					//console.log(contextStores)
+					if(contextStores == undefined){						
+						return
 					}
+					if(Object.keys(contextStores).length === 0 && contextStores.constructor === Object){						
+						return
+					}
+					
+					for (var key in contextStores) {
+						if(key == 'default'){continue}						
+						if(contextStores[key].hasOwnProperty('module')){
+							if(contextStores[key].module == 'localfilesystem'){
+								stroageSpace = key								
+								return									
+							}
+						}						
+					}
+				}
+				
+				storeInContext = function (force){
+					if(stroageSpace == null){
+						return						
+					}					
+					if(force == true || config.persist == true){
+						ctx.set('stateTrailStorage',storage, stroageSpace)
+						ctx.set('stateTrailMax',config.max, stroageSpace)
+						ctx.set('stateTrailMin',config.min, stroageSpace)	
+					}
+				}
+				
+				showInfo = function(){
+					if(config.persist == false){
+						node.status({});
+						return
+					}
+					if(stroageSpace == null){
+						node.status({fill:'grey',shape:"ring",text:"store: N/A"});
+						return
+					}
+					var total = storage.length + 2
+					var f = total > 1000 ? "red" : "green"
+					var s = total > 1000 ? "dot" : "ring"
+					node.status({fill:f,shape:s,text:"store: "+stroageSpace+" count: "+total});
 				}
 				
 				var group = RED.nodes.getNode(config.group);
@@ -314,14 +357,14 @@ module.exports = function (RED) {
 				config.period = parseInt(config.periodLimit) * parseInt(config.periodLimitUnit) * 1000
 				config.tickmarks = config.tickmarks || 4				
 				
-				storage = config.persist ? ctx.get('stateTrailStorage') || [] : []	
-				config.max = config.persist ? ctx.get('stateTrailMax') || new Date().getTime() : new Date().getTime()
-				config.min = config.persist ? ctx.get('stateTrailMin') || (config.max - config.period) : (config.max - config.period)
-				config.insidemin = storage.length < 3 ? config.min :  storage[1].time				
-				storeInContext(true)
-
-/* 				var contextStores = RED.settings.get('contextStorage')
-            	console.log(contextStores)  */
+				prepareStorage()
+				
+				storage = (config.persist && stroageSpace != null) ? ctx.get('stateTrailStorage',stroageSpace) || [] : []	
+				config.max = (config.persist && stroageSpace != null) ? ctx.get('stateTrailMax',stroageSpace) || new Date().getTime() : new Date().getTime()
+				config.min = (config.persist && stroageSpace != null) ? ctx.get('stateTrailMin',stroageSpace) || (config.max - config.period) : (config.max - config.period)
+				config.insidemin = storage.length < 3 ? config.min :  storage[1].time
+								
+				storeInContext(true)				
 				
 				config.initial = {stops:generateGradient(),ticks:generateTicks()}
 				

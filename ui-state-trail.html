@@ -64,11 +64,11 @@ SOFTWARE.
 
 </br>
 <div class='form-row' id='node-input-persistance'>
-    <label for='node-input-persist'><i class='icon-tag'></i> Initial state</label>
+    <label for='node-input-persist'><i class='icon-tag'></i> Data Storage</label>
     <input type="checkbox" id="node-input-persist" 
             style="display:inline-block; width:auto; vertical-align:baseline; 
-            margin-right:5px;margin-left:5px;">Restore from saved state
-    </div>
+            margin-right:5px;margin-left:5px;">use persistable storage if available
+</div>
 <div class='form-row' id='node-input-bl-label'>
     <label for='node-input-blanklabel'><i class='icon-tag'></i> Blank label</label>
     <input type='text' id='node-input-blanklabel' placeholder='Waiting data'>
@@ -123,7 +123,7 @@ SOFTWARE.
         },
         oneditprepare: function() {            
             function getColor(idx) {
-                var colors = ['#009933','#adad85','#ff0000','#009999','#cccc00','#ff33cc','#cc6600','#99ff66','#660033']
+                var colors = ['#009933','#999999','#ff6666','#009999','#cccc00','#ff33cc','#cc6600','#99ff66','#660033']
                 if(idx > colors.length-1){
                     return colors[Math.floor(Math.random()*colors.length)]
                 }
@@ -313,5 +313,13 @@ SOFTWARE.
 
                 
     </dl>
+
+<h2>Data Storage</h2>
+    <p>If checked, the node searches for context storage which uses <code>'localfilesystem'</code>  module. If it is found, the collected data is stored into persistable context.
+        This makes available data recovery in case of Node-RED restart and after deploy. If <code>'localfilesystem'</code> is not found, the node will start with clean session.
+        <p>Be aware that settings about data writing are not under node's control. It depends on how the <code>contextStorage</code> is configured at settings.js. 
+    <p>If Data stroage is in use, the node shows status with context storage name and count of datapoints currently stored. 
+        If <code>'localfilesystem'</code> is not found, the status shows <code>"store: N/A"</code>
+  
     
 </script>

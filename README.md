@@ -40,3 +40,12 @@ If you want to use the widget to show historical data, you need to pass in every
 <code>msg.payload = {state:true,timestamp:1579362774639}</code>
 
 To clear the data, send an empty array <code>msg.payload = []</code> 
+
+### Data Storage
+If checked, the node searches for context storage which uses <code>'localfilesystem'</code>  module. If it is found, the collected data is stored into persistable context.
+This makes available data recovery in case of Node-RED restart and after deploy. If <code>'localfilesystem'</code> is not found, the node will start with clean session.
+
+Be aware that settings about data writing are not under node's control. It depends on how the <code>contextStorage</code> is configured at settings.js. 
+If Data stroage is in use, the node shows status with context storage name and count of datapoints currently stored. 
+
+If <code>'localfilesystem'</code> is not found, the status shows <code>"store: N/A"</code>
