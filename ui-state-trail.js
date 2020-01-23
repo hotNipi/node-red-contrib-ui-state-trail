@@ -296,7 +296,7 @@ module.exports = function (RED) {
 				
 				prepareStorage = function(){
 					var contextStores = RED.settings.get('contextStorage')
-					console.log(contextStores)
+					//console.log(contextStores)
 					if(contextStores == undefined){						
 						return
 					}
