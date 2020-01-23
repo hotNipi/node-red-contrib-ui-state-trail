@@ -296,7 +296,7 @@ module.exports = function (RED) {
 				
 				prepareStorage = function(){
 					var contextStores = RED.settings.get('contextStorage')
-					//console.log(contextStores)
+					console.log(contextStores)
 					if(contextStores == undefined){						
 						return
 					}
@@ -305,7 +305,6 @@ module.exports = function (RED) {
 					}
 					
 					for (var key in contextStores) {
-						if(key == 'default'){continue}						
 						if(contextStores[key].hasOwnProperty('module')){
 							if(contextStores[key].module == 'localfilesystem'){
 								stroageSpace = key								
