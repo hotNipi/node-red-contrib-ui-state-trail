@@ -42,11 +42,6 @@ If you want to use the widget to show historical data, you need to pass in every
 To clear the data, send an empty array <code>msg.payload = []</code> 
 
 ### Data Storage
-If checked, the node searches for context storage which uses <code>'localfilesystem'</code>  module. If it is found, the collected data is stored into persistable context.
-This makes available data recovery in case of Node-RED restart and after deploy. If <code>'localfilesystem'</code> is not found, the node will start with clean session.
+After a full re-deploy, Node-RED restart or system reboot, the node will lose it's saved chart data, unless the user has selected the 'Data Storage' option (checkbox) AND enabled a persistent form of context storage in the Node-RED settings.js file. In that case, the node will attempt to restore the data as it was prior to the re-deploy, restart or reboot.
 
-Be aware that settings about data writing are not under node's control. It depends on how the <code>contextStorage</code> is configured at settings.js. 
-
-If Data storage is in use and working well, the node shows status with context storage name and count of datapoints currently stored. If <code>'localfilesystem'</code> is not found, the status shows <code>"store: N/A"</code>
-
-If Data Storage is not in use, node doesn't show status info.
+See the node-RED user guide to configure persistent storage - https://nodered.org/docs/user-guide/context#saving-context-data-to-the-file-system

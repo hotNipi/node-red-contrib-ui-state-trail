@@ -295,20 +295,16 @@ module.exports = function (RED) {
 				}
 				
 				prepareStorage = function(){
-					var contextStores = RED.settings.get('contextStorage')
-					console.log('available stores:',contextStores)
+					var contextStores = RED.settings.get('contextStorage')					
 					if(contextStores == undefined){						
 						return
 					}
 					if(Object.keys(contextStores).length === 0 && contextStores.constructor === Object){						
 						return
-					}
-					
+					}					
 					for (var key in contextStores) {
-						if(contextStores[key].hasOwnProperty('module')){
-							console.log('contextStores[key]',contextStores[key])
+						if(contextStores[key].hasOwnProperty('module')){							
 							if(contextStores[key].module == 'localfilesystem'){
-								console.log('found:',contextStores[key].module)
 								stroageSpace = key								
 								return									
 							}
@@ -370,7 +366,7 @@ module.exports = function (RED) {
 				config.initial = {stops:generateGradient(),ticks:generateTicks()}
 				
 				var html = HTML(config);		
-				console.log(config)
+
 				done = ui.addWidget({
 					node: node,
 					order: config.order, 
