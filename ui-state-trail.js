@@ -335,8 +335,8 @@ module.exports = function (RED) {
 						return
 					}
 					var total = storage.length + 2
-					var f = total > 1000 ? "red" : "green"
-					var s = total > 1000 ? "dot" : "ring"
+					var f = total > 700 ? "red" : total > 400 ? "yellow" : "green"
+					var s = total > 200 ? "dot" : "ring"
 					node.status({fill:f,shape:s,text:"store: "+stroageSpace+" count: "+total});
 				}
 				
