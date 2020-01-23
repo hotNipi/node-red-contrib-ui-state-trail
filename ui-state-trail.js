@@ -296,7 +296,7 @@ module.exports = function (RED) {
 				
 				prepareStorage = function(){
 					var contextStores = RED.settings.get('contextStorage')
-					//console.log(contextStores)
+					console.log('available stores:',contextStores)
 					if(contextStores == undefined){						
 						return
 					}
@@ -306,7 +306,9 @@ module.exports = function (RED) {
 					
 					for (var key in contextStores) {
 						if(contextStores[key].hasOwnProperty('module')){
+							console.log('contextStores[key]',contextStores[key])
 							if(contextStores[key].module == 'localfilesystem'){
+								console.log('found:',contextStores[key].module)
 								stroageSpace = key								
 								return									
 							}
@@ -368,7 +370,7 @@ module.exports = function (RED) {
 				config.initial = {stops:generateGradient(),ticks:generateTicks()}
 				
 				var html = HTML(config);		
-				
+				console.log(config)
 				done = ui.addWidget({
 					node: node,
 					order: config.order, 
