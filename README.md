@@ -46,6 +46,7 @@ If checked, the node searches for context storage which uses <code>'localfilesys
 This makes available data recovery in case of Node-RED restart and after deploy. If <code>'localfilesystem'</code> is not found, the node will start with clean session.
 
 Be aware that settings about data writing are not under node's control. It depends on how the <code>contextStorage</code> is configured at settings.js. 
-If Data stroage is in use, the node shows status with context storage name and count of datapoints currently stored. 
 
-If <code>'localfilesystem'</code> is not found, the status shows <code>"store: N/A"</code>
+If Data storage is in use and working well, the node shows status with context storage name and count of datapoints currently stored. If <code>'localfilesystem'</code> is not found, the status shows <code>"store: N/A"</code>
+
+If Data Storage is not in use, node doesn't show status info.
