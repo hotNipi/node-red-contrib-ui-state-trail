@@ -57,7 +57,7 @@ SOFTWARE.
 
 <div class="form-row node-input-rule-container-row">
     <ol id="node-input-rule-container"></ol>
-    <div style="color:red; position:relative; top:-20px; left:50px" id="error-ruleinfo">All states must be unique!</div>
+    
 </div>
 
 </br>
@@ -189,7 +189,8 @@ SOFTWARE.
                 removable:true,
                 header: $("<div>").css({padding:"6px"}).append($.parseHTML(`
                     <div style='width:120px; text-align:center; display: inline-grid'><b>State</b></div> 
-                    <div style='width:80px; text-align:center; display: inline-grid'><b>Color</b></div>  
+                    <div style='width:80px; text-align:center; display: inline-grid'><b>Color</b></div>
+                    <div id='error-ruleinfo' style='width:220px; color:red; text-align:center; font-weight:bold; display:inline-grid'></div>  
                     `)),
                 addItem: function(container, index, rule) {                    
                     if (!rule.hasOwnProperty('state')) {
