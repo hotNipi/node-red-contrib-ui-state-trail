@@ -57,9 +57,7 @@ SOFTWARE.
 
 <div class="form-row node-input-rule-container-row">
     <ol id="node-input-rule-container"></ol>
-    <div id="error-ruleinfo">
-        <p style="color:red; position:relative; top:-20px; left:50px">All states must be unique!
-    </div>
+    <div style="color:red; position:relative; top:-20px; left:50px" id="error-ruleinfo">All states must be unique!</div>
 </div>
 
 </br>
@@ -79,10 +77,13 @@ SOFTWARE.
 </div>
 </script>
 <script type='text/javascript'>
- 
+    var ERR_COUNT = "Configure at least 2 states!"
+    var ERR_UNIQUE = "All states must be unique!"
+    
     RED.nodes.registerType('ui_statetrail',{
         category: 'dashboard',
         color: 'rgb( 63, 173, 181)',
+        configError:'',
         defaults: {
             group: {type: 'ui_group', required:true},
             order: {value: 0},
@@ -102,8 +103,16 @@ SOFTWARE.
             label:{value: ''},
             states:{value:[{state:true,col:"#009933",t:"bool"},{state:false,col:"#999999",t:"bool"}],
                     validate: function(v) {
+                        configError = ""
                         var unique = [...new Set(v.map(s => s.state))]
-                        var valid = v.length > 1 && v.length == unique.length                         
+                        var valid = true 
+                        if(v.length < 2){
+                            configError = ERR_COUNT
+                            valid = false
+                        }else if (v.length != unique.length){
+                            configError = ERR_UNIQUE
+                            valid = false
+                        }                 
                         return valid
                     }},
             periodLimit: {value: 1, validate:RED.validators.number(), required:true},
@@ -111,8 +120,7 @@ SOFTWARE.
             timeformat: {value: 'HH:mm:ss'},
             tickmarks:{val:4, required: true},
             persist:{val:false, required: true},
-            blanklabel:{value: ''}
-                    
+            blanklabel:{value: ''}                    
         },
         inputs:1,
         outputs:0,
@@ -132,16 +140,11 @@ SOFTWARE.
             function defaultRule(idx){
                 return {state:true,col:getColor(idx),t:"bool"}
             }
-            function ruleInfo(flag){
-                if(flag){
-                    $('#error-ruleinfo').show(); 
-                }
-                else{
-                    $('#error-ruleinfo').hide();
-                }
-               
+            
+            function ruleInfo(error){                 
+                $('#error-ruleinfo').text(error);
+                $('.red-ui-editableList-border').toggleClass('input-error',(error != ""));                
             }
-            $('#error-ruleinfo').hide();
             
             $('#node-input-size').elementSizer({
                 width: '#node-input-width',
@@ -210,12 +213,21 @@ SOFTWARE.
                    
                     propField.typedInput('value',rule.state);
                     propField.typedInput('type',rule.t);
-                    propField.typedInput().on('change', function(type, value) {ruleInfo(false)});
-                    $('.red-ui-editableList-border').toggleClass('input-error',($("#node-input-rule-container").editableList('items').length < 2 ));                  
+                    propField.typedInput().on('change', function(type, value) {
+                       if(configError == ERR_UNIQUE){
+                            configError = "" 
+                            ruleInfo(configError)
+                       }                       
+                    });
+                    if(index > 0 && configError == ERR_COUNT){
+                        configError = "" 
+                        ruleInfo(configError)   
+                    }                   
+                            
                 },
-                removeItem: function(data) {
-                    $('.red-ui-editableList-border').toggleClass('input-error',($("#node-input-rule-container").editableList('items').length < 2 ));
-                    ruleInfo(false)
+                removeItem: function(data) {                   
+                    configError = "" 
+                     ruleInfo(configError)
                 }
             });
 
@@ -228,10 +240,8 @@ SOFTWARE.
             for (var i=0; i<this.states.length; i++) {
                 var rule = this.states[i];
                 $("#node-input-rule-container").editableList('addItem',rule);
-            }
-            $('.red-ui-editableList-border').toggleClass('input-error',($("#node-input-rule-container").editableList('items').length < 2 ));
-            var us = [...new Set(this.states.map(s => s.state))]
-            ruleInfo(us.length != this.states.length)         
+            }           
+            ruleInfo(configError)         
         },
         oneditsave: function (){
             
