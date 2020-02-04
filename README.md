@@ -31,6 +31,9 @@ States can be configured with mixing the types. States <code>true</code> (boolea
 ### Blank label
 Text to show when there is not yet enough data to display the chart. 
 
+### Legend
+To show the legend, tick the checkbox and widget height must be configured to 2 units. By clicking the legend on dashboard, you can toggle between names and summary. Summary shows aggregated time for each state.
+
 ### Input
         
 <code>msg.payload</code> should carry single value of one of configured states

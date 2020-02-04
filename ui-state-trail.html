@@ -56,16 +56,21 @@ SOFTWARE.
 </div>
 
 <div class="form-row node-input-rule-container-row">
-    <ol id="node-input-rule-container"></ol>
-    
+    <ol id="node-input-rule-container"></ol>    
 </div>
 
 </br>
+<div class='form-row' id='node-input-features'>
+    <label for='node-input-legend'><i class='icon-tag'></i> Legend</label>
+    <input type="checkbox" id="node-input-legend" 
+            style="display:inline-block; width:auto; vertical-align:baseline; 
+            margin-right:5px;margin-left:5px;">Show legend
+</div>
 <div class='form-row' id='node-input-persistance'>
     <label for='node-input-persist'><i class='icon-tag'></i> Data Storage</label>
     <input type="checkbox" id="node-input-persist" 
             style="display:inline-block; width:auto; vertical-align:baseline; 
-            margin-right:5px;margin-left:5px;">use persistable storage if available
+            margin-right:5px;margin-left:5px;">Use persistable storage if available
 </div>
 <div class='form-row' id='node-input-bl-label'>
     <label for='node-input-blanklabel'><i class='icon-tag'></i> Blank label</label>
@@ -120,6 +125,7 @@ SOFTWARE.
             timeformat: {value: 'HH:mm:ss'},
             tickmarks:{val:4, required: true},
             persist:{val:false, required: true},
+            legend:{val:false, required: true},
             blanklabel:{value: ''}                    
         },
         inputs:1,
@@ -163,7 +169,10 @@ SOFTWARE.
             
             if (this.persist === undefined) {
                 $("#node-input-persist").prop('checked', false);
-            } 
+            }
+            if (this.legend === undefined) {
+                $("#node-input-legend").prop('checked', false);
+            }  
            
             var oval = $("#node-input-timeformat").val();
             if (!oval) { $("#node-input-timeformat").val("HH:mm:ss"); }
@@ -284,7 +293,7 @@ SOFTWARE.
 </br>
     <h3>Configuration</h3>
     <h2>Label</h2>
-    <p>To show label configure widget height to 2 units. 
+    <p>To show the label, configure widget height to 2 units. 
   
     <h2>Period</h2>
     <p>Time period. If configured to long period, keep input rate low. Too much data may harm performance significantly.
@@ -299,6 +308,10 @@ SOFTWARE.
     
     <h2>Blank label</h2>
     <p>Text to show when there is not yet enough data to display the chart.
+    
+    <h2>Legend</h2>
+    <p>To show the legend, tick the checkbox and widget height must be configured to 2 units. By clicking the legend on dashboard, you can toggle between names and summary. Summary shows aggregated time for each state.
+
 </br>
 </br>
     <h3>Input</h3>

@@ -25,8 +25,10 @@ SOFTWARE.
 
 module.exports = function (RED) {
 	function HTML(config) {
-		var data = JSON.stringify(config.initial);			
+		var data = JSON.stringify(config.initial);	
+		var states = config.states		
 		var styles = String.raw`
+		
 		<style>
 			.txt-{{unique}} {	
 				font-size:1em;			
@@ -34,7 +36,10 @@ module.exports = function (RED) {
 			}	
 			.txt-{{unique}}.small{
 				font-size:0.7em;
-			}			
+			}
+			.statra-{{unique}}.legend{
+				cursor:pointer;
+			}				
 		</style>`
 		var gradient = String.raw`fill="url(#statra_gradi_{{unique}})"`		
 		var layout = String.raw`		
@@ -45,10 +50,16 @@ module.exports = function (RED) {
 					</linearGradient>	
 				</defs>
 				<text ng-if="${config.height > 1}">
-					<tspan id="statra_label_{{unique}}" class="txt-{{unique}}" text-anchor="middle" dominant-baseline="middle" x=`+config.exactwidth/2+` y="25%">
+					<tspan  ng-if="${config.legend == true}" id="statra_label_{{unique}}" class="txt-{{unique}}" text-anchor="middle" dominant-baseline="hanging" x=`+config.exactwidth/2+` y="2%">
+						`+config.label+`
+					</tspan>
+					<tspan  ng-if="${config.legend == false}" id="statra_label_{{unique}}" class="txt-{{unique}}" text-anchor="middle" dominant-baseline="middle" x=`+config.exactwidth/2+` y="25%">
 						`+config.label+`
 					</tspan>
 				</text>	
+				<g class="statra-{{unique}} legend" id="statra_legend_{{unique}}" ng-if="${(config.height > 1 && config.legend == true)}" style="outline: none; border: 0;" ng-click='toggle()'>
+
+				</g>	
 				<text ng-if="${config.blanklabel != ""}" font-style="italic">
 					<tspan id="statra_blank_{{unique}}" class="txt-{{unique}}" text-anchor="middle" dominant-baseline="hanging" x=`+config.exactwidth/2+` y="`+config.stripe.y+`%">
 						`+config.blanklabel+`
@@ -103,6 +114,7 @@ module.exports = function (RED) {
 			var prepareStorage = null;
 			var stroageSpace = null;
 			var showInfo = null;
+			var collectSummary = null;
 			var ctx = node.context()
 	
 			if (checkConfig(node, config)) {
@@ -164,10 +176,29 @@ module.exports = function (RED) {
 										
 					config.min = storage[0].time
 					config.insidemin = storage.length < 3 ? config.min :  storage[1].time
-					config.max = storage[storage.length - 1].time
+					config.max = storage[storage.length - 1].time					
 					showInfo()	
 					storeInContext()					
-				}				
+				}
+				
+				collectSummary = function(){
+					var sum = {}
+					var i
+					var len = storage.length
+					for(i = 0;i<config.states.length;i++){
+						if(!sum.hasOwnProperty(config.states[i].state)){
+							sum[config.states[i].state] = 0
+						}
+					}
+					for(i = 1;i<len;i++){					
+						sum[storage[i-1].state] += storage[i].time - storage[i-1].time
+					}
+					var ret = []
+					for(i = 0;i<config.states.length;i++){
+						ret.push({name:config.states[i].state.toString(),col:config.states[i].col,val:formatTime(sum[config.states[i].state],true)})
+					}					
+					return ret
+				}
 
 				getSiteProperties = function(){
 					var opts = null;					
@@ -242,9 +273,9 @@ module.exports = function (RED) {
 					
 					return ret
 				}
-				formatTime = function(stamp){
-					var d = new Date(stamp);
-					var hours = d.getHours(); 
+				formatTime = function(stamp,utc){
+					var d = new Date(stamp);					
+					var hours =  utc ? d.getUTCHours() : d.getHours(); 
 					var minutes = d.getMinutes(); 
 					var seconds = d.getSeconds(); 
 					var t 
@@ -389,7 +420,7 @@ module.exports = function (RED) {
 						}
 						store(validated)
 						
-						msg.payload = {stops:generateGradient(),ticks:generateTicks()}
+						msg.payload = {stops:generateGradient(),ticks:generateTicks(),legend:collectSummary()}
 						return { msg };
 					},
 					
@@ -397,9 +428,18 @@ module.exports = function (RED) {
 						$scope.unique = $scope.$eval('$id')
 						$scope.svgns = 'http://www.w3.org/2000/svg';
 						$scope.timeout = null
+						$scope.legendvalue = 'name'
+						$scope.legend = null
 						
 						$scope.init = function(data){
 							update(data)
+						}
+
+						$scope.toggle = function(){							
+							$scope.legendvalue = $scope.legendvalue == 'name' ? 'summary' : 'name'
+							if($scope.legend != null){
+								updateLegend($scope.legend)
+							}							
 						}
 						
 						var update = function(data){
@@ -411,6 +451,51 @@ module.exports = function (RED) {
 							$scope.timeout = null
 							updateGradient(data.stops)
 							updateTicks(data.ticks)
+							updateLegend(data.legend)
+						}
+
+						var updateLegend = function (legend){
+							if(!legend){
+								return
+							}
+							$scope.legend = legend
+							var g =  document.getElementById("statra_legend_"+$scope.unique);
+							if(!g){
+								return
+							}
+							var xp = 0
+							if(g.children.length == 0){
+								var rect
+								var txt
+								for(var i=0;i<legend.length;i++){
+									xp = i*60
+									rect = document.createElementNS($scope.svgns, 'rect');
+									rect.setAttributeNS(null, 'x', xp);
+									rect.setAttributeNS(null, 'y', '30%');
+									rect.setAttributeNS(null, 'height', '11');
+									rect.setAttributeNS(null, 'width', '8');
+									rect.setAttributeNS(null, 'fill', legend[i].col);
+									document.getElementById("statra_legend_"+$scope.unique).appendChild(rect);
+
+									txt = document.createElementNS($scope.svgns, 'text');
+									txt.setAttributeNS(null, 'x', xp+12);
+									txt.setAttributeNS(null, 'y', '30%');
+									txt.setAttributeNS(null, 'dominant-baseline', 'hanging');
+									txt.setAttributeNS(null, 'fill', legend[i].col)
+									txt.setAttribute('class','txt-'+$scope.unique+' small')
+									txt.setAttribute('id','statra_txt_legend_'+$scope.unique+"_"+i)
+									txt.textContent = legend[i].val
+									document.getElementById("statra_legend_"+$scope.unique).appendChild(txt);
+								}								
+							}
+							else{
+								for(var i=0;i<legend.length;i++){
+									var txt = document.getElementById("statra_txt_legend_"+$scope.unique+"_"+i)
+									if(txt){								
+										$(txt).text($scope.legendvalue == 'name' ? legend[i].name : legend[i].val);
+									}
+								}
+							}							
 						}
 						
 						var updateGradient = function (stops){
