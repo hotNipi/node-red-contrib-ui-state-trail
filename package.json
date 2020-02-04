@@ -1,6 +1,6 @@
 {
     "name": "node-red-contrib-ui-state-trail",
-    "version": "0.1.5",
+    "version": "0.1.6",
     "description": "A Node-RED dashboard ui node. Trail of state changes over time",
     "main": "ui-state-trail.js",
     "node-red": {
