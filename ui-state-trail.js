@@ -183,19 +183,25 @@ module.exports = function (RED) {
 				collectSummary = function(){
 					var sum = {}
 					var i
+					var total = 0
+					var z = 0
+					var p = 0
 					var len = storage.length
 					for(i = 0;i<config.states.length;i++){
 						if(!sum.hasOwnProperty(config.states[i].state)){
 							sum[config.states[i].state] = 0
 						}
 					}
-					for(i = 1;i<len;i++){					
-						sum[storage[i-1].state] += storage[i].time - storage[i-1].time
+					for(i = 1;i<len;i++){
+						z = storage[i].time - storage[i-1].time					
+						sum[storage[i-1].state] += z
+						total += z
 					}
 					var ret = []
 					for(i = 0;i<config.states.length;i++){
-						ret.push({name:config.states[i].state.toString(),col:config.states[i].col,val:formatTime(sum[config.states[i].state],true)})
-					}					
+						p = (100*sum[config.states[i].state]/total).toFixed(2) + "%"
+						ret.push({name:config.states[i].state.toString(),col:config.states[i].col,val:formatTime(sum[config.states[i].state],true),per:p})
+					}
 					return ret
 				}
 
@@ -427,6 +433,7 @@ module.exports = function (RED) {
 						$scope.unique = $scope.$eval('$id')
 						$scope.svgns = 'http://www.w3.org/2000/svg';
 						$scope.timeout = null
+						$scope.legendvalues = ['name','val','per']
 						$scope.legendvalue = 'name'
 						$scope.legend = null
 						
@@ -435,7 +442,11 @@ module.exports = function (RED) {
 						}
 
 						$scope.toggle = function(){							
-							$scope.legendvalue = $scope.legendvalue == 'name' ? 'summary' : 'name'
+							var idx = $scope.legendvalues.indexOf($scope.legendvalue) + 1
+							if(idx ==  $scope.legendvalues.length){
+								idx = 0
+							}
+							$scope.legendvalue = $scope.legendvalues[idx]
 							if($scope.legend != null){
 								updateLegend($scope.legend)
 							}							
@@ -457,11 +468,11 @@ module.exports = function (RED) {
 							if(!legend){
 								return
 							}
-							$scope.legend = legend
 							var g =  document.getElementById("statra_legend_"+$scope.unique);
 							if(!g){
 								return
 							}
+							$scope.legend = legend							
 							var xp = 0
 							if(g.children.length == 0){
 								var rect
@@ -474,6 +485,7 @@ module.exports = function (RED) {
 									rect.setAttributeNS(null, 'height', '11');
 									rect.setAttributeNS(null, 'width', '8');
 									rect.setAttributeNS(null, 'fill', legend[i].col);
+									rect.setAttribute('id','statra_rect_legend_'+$scope.unique+"_"+i)
 									document.getElementById("statra_legend_"+$scope.unique).appendChild(rect);
 
 									txt = document.createElementNS($scope.svgns, 'text');
@@ -483,15 +495,19 @@ module.exports = function (RED) {
 									txt.setAttributeNS(null, 'fill', legend[i].col)
 									txt.setAttribute('class','txt-'+$scope.unique+' small')
 									txt.setAttribute('id','statra_txt_legend_'+$scope.unique+"_"+i)
-									txt.textContent = legend[i].val
+									txt.textContent = legend[i][$scope.legendvalue]
 									document.getElementById("statra_legend_"+$scope.unique).appendChild(txt);
 								}								
 							}
 							else{
 								for(var i=0;i<legend.length;i++){
-									var txt = document.getElementById("statra_txt_legend_"+$scope.unique+"_"+i)
-									if(txt){								
-										$(txt).text($scope.legendvalue == 'name' ? legend[i].name : legend[i].val);
+									var el = document.getElementById("statra_txt_legend_"+$scope.unique+"_"+i)
+									if(el){								
+										$(el).text(legend[i][$scope.legendvalue]);
+									}
+									el = document.getElementById("statra_rect_legend_"+$scope.unique+"_"+i)
+									if(el){								
+										$(el).attr("fill", legend[i].col)
 									}
 								}
 							}							
@@ -514,16 +530,16 @@ module.exports = function (RED) {
 							}							
 						}	
 						
-						var updateTicks = function (times){
-							$("[id*='statra_tickval_"+$scope.unique+"']").text('') 
-							$("[id*='statra_tick_"+$scope.unique+"']").attr('visibility','hidden')
+						var updateTicks = function (times){						
 							var len = times.length
 							for (let i = 0; i < len; i++) {
 								var tick =  document.getElementById("statra_tick_"+$scope.unique+"_"+times[i].id);
 								if(tick){
 									$(tick).attr('x1',times[i].x+"%");
 									$(tick).attr('x2',times[i].x+"%");
-									$(tick).attr('visibility','visible')									
+									if($(tick).attr('visibility') != 'visible'){
+										$(tick).attr('visibility','visible')
+									}																	
 								}
 								tick =  document.getElementById("statra_tickval_"+$scope.unique+"_"+times[i].id);
 								if(tick){								
