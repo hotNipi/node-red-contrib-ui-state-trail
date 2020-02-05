@@ -26,7 +26,6 @@ SOFTWARE.
 module.exports = function (RED) {
 	function HTML(config) {
 		var data = JSON.stringify(config.initial);	
-		var states = config.states		
 		var styles = String.raw`
 		
 		<style>
