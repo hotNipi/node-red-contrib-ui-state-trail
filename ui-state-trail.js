@@ -64,7 +64,7 @@ module.exports = function (RED) {
 						`+config.blanklabel+`
 					</tspan>
 				</text>	
-				<rect id="statra_{{unique}}" x="`+config.stripe.x+`" y="`+config.stripe.y+`%" width="`+config.exactwidth+`" height="`+config.stripe.height+`" style="stroke:none"; ${gradient}/>	
+				<rect id="statra_{{unique}}" ng-click='onClick($event)' x="`+config.stripe.x+`" y="`+config.stripe.y+`%" width="`+config.exactwidth+`" height="`+config.stripe.height+`" style="stroke:none; outline: none; cursor:pointer;" ${gradient}/>	
 			
 				<text ng-repeat="x in [].constructor(${config.tickmarks}) track by $index" id=statra_tickval_{{unique}}_{{$index}} 
 				class="txt-{{unique}} small" text-anchor="middle" dominant-baseline="baseline"
@@ -233,10 +233,8 @@ module.exports = function (RED) {
                     if (r) { v = Math.round(v); }
 					return v					
 				}	
-				getPosition = function(target,min,max){
-					var p =  {minin:min, maxin:max, minout:config.stripe.left, maxout:config.stripe.right}
-					return range(target,p,'clamp',false)
-				}
+				
+				
 				
 				getColor = function(type){
 					for(var i = 0;i<config.states.length;i++){
@@ -373,6 +371,36 @@ module.exports = function (RED) {
 					var s = total > 200 ? "dot" : "ring"
 					node.status({fill:f,shape:s,text:"store: "+stroageSpace+" count: "+total});
 				}
+
+				getPosition = function(target,min,max){					
+					var p =  {minin:min, maxin:max, minout:config.stripe.left, maxout:config.stripe.right}					
+					return range(target,p,'clamp',false)
+				}
+
+				getTimeFromPos = function(pos,min,max){
+					var p = {minin:min, maxin:max, minout:config.insidemin, maxout:config.max}
+					return range(pos,p,'clamp',true)
+				}
+
+				function getStateFromCoordinates(c){											
+					if(c > config.stripe.mousemax || c < config.stripe.mousemin){						
+						return null
+					}
+					var time = getTimeFromPos(c,config.stripe.mousemin,config.stripe.mousemax)
+					
+					var idx = -1 + storage.findIndex(function(state) {
+						return state.time > time;
+					})
+					var current = storage[idx]
+					var next = storage[idx+1]
+					var dur = next.time - current.time
+					var ret = {state:current.state,time:current.time,duration:dur}
+					return ret
+				}
+
+				function generateOutMessage(evt){					
+					return {payload:getStateFromCoordinates(evt.targetX) ,clickCoordinates:evt}
+				}
 				
 				var group = RED.nodes.getNode(config.group);
 				var site = getSiteProperties();				
@@ -387,6 +415,9 @@ module.exports = function (RED) {
 				var sy = config.height == 1 ? 0 : 50
 				var edge = Math.max(config.timeformat.length,6) * 4 * 100 / config.exactwidth
 				config.stripe = {height:sh,x:0,y:sy,left:edge,right:(100-edge)}
+				config.stripe.mousemin = config.stripe.left*config.exactwidth/100
+				config.stripe.mousemax = config.stripe.right*config.exactwidth/100
+
 				config.period = parseInt(config.periodLimit) * parseInt(config.periodLimitUnit) * 1000
 				config.tickmarks = config.tickmarks || 4				
 				
@@ -399,7 +430,7 @@ module.exports = function (RED) {
 								
 				storeInContext(true)				
 				
-				config.initial = {stops:generateGradient(),ticks:generateTicks()}
+				config.initial = {stops:generateGradient(),ticks:generateTicks(),legend:collectSummary()}
 				
 				var html = HTML(config);		
 
@@ -412,7 +443,7 @@ module.exports = function (RED) {
 					format: html,					
 					templateScope: "local",
 					emitOnlyNewValues: false,
-					forwardInputMessages: true,					
+					forwardInputMessages: false,					
 					storeFrontEndInputAsState: true,
 					
 					beforeEmit: function (msg) {
@@ -428,6 +459,17 @@ module.exports = function (RED) {
 						msg.payload = {stops:generateGradient(),ticks:generateTicks(),legend:collectSummary()}
 						return { msg };
 					},
+					beforeSend: function (msg, orig) {
+						try {
+							if (!orig || !orig.msg) {
+								return;
+							}
+							return  generateOutMessage(orig.msg.clickevent);
+						} catch (error) {
+							node.error(error);
+						}
+						
+					},
 					
 					initController: function ($scope) {																		
 						$scope.unique = $scope.$eval('$id')
@@ -439,6 +481,18 @@ module.exports = function (RED) {
 						
 						$scope.init = function(data){
 							update(data)
+						}
+
+						$scope.onClick = function(e){							
+							//console.log(e)
+							var coord = {
+								screenX: e.originalEvent.screenX,
+								screenY: e.originalEvent.screenY,
+								clientX: e.originalEvent.clientX,
+								clientY: e.originalEvent.clientY,
+								targetX: e.originalEvent.offsetX
+							}
+							$scope.send({clickevent: coord});					
 						}
 
 						$scope.toggle = function(){							
