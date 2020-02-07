@@ -101,6 +101,7 @@ module.exports = function (RED) {
 		
 			var getSiteProperties = null;
 			var getPosition = null;
+			var getTimeFromPos = null;
 			var checkPayload = null;
 			var store = null;
 			var generateGradient = null;
@@ -114,6 +115,8 @@ module.exports = function (RED) {
 			var stroageSpace = null;
 			var showInfo = null;
 			var collectSummary = null;
+			var getStateFromCoordinates = null;
+			var generateOutMessage = null;
 			var ctx = node.context()
 	
 			if (checkConfig(node, config)) {
@@ -382,7 +385,7 @@ module.exports = function (RED) {
 					return range(pos,p,'clamp',true)
 				}
 
-				function getStateFromCoordinates(c){											
+				getStateFromCoordinates = function(c){											
 					if(c > config.stripe.mousemax || c < config.stripe.mousemin){						
 						return null
 					}
@@ -398,7 +401,7 @@ module.exports = function (RED) {
 					return ret
 				}
 
-				function generateOutMessage(evt){					
+				generateOutMessage = function(evt){					
 					return {payload:getStateFromCoordinates(evt.targetX) ,clickCoordinates:evt}
 				}
 				
