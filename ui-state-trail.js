@@ -535,7 +535,7 @@ module.exports = function (RED) {
 								var rect
 								var txt
 								for(var i=0;i<legend.length;i++){
-									xp = i*60
+									
 									rect = document.createElementNS($scope.svgns, 'rect');
 									rect.setAttributeNS(null, 'x', xp);
 									rect.setAttributeNS(null, 'y', '30%');
@@ -544,9 +544,10 @@ module.exports = function (RED) {
 									rect.setAttributeNS(null, 'fill', legend[i].col);
 									rect.setAttribute('id','statra_rect_legend_'+$scope.unique+"_"+i)
 									document.getElementById("statra_legend_"+$scope.unique).appendChild(rect);
+									xp += rect.getBoundingClientRect().width + 5
 
 									txt = document.createElementNS($scope.svgns, 'text');
-									txt.setAttributeNS(null, 'x', xp+12);
+									txt.setAttributeNS(null, 'x', xp);
 									txt.setAttributeNS(null, 'y', '30%');
 									txt.setAttributeNS(null, 'dominant-baseline', 'hanging');
 									txt.setAttributeNS(null, 'fill', legend[i].col)
@@ -554,18 +555,25 @@ module.exports = function (RED) {
 									txt.setAttribute('id','statra_txt_legend_'+$scope.unique+"_"+i)
 									txt.textContent = legend[i][$scope.legendvalue]
 									document.getElementById("statra_legend_"+$scope.unique).appendChild(txt);
+									xp += txt.getBoundingClientRect().width + 5
 								}								
 							}
 							else{
-								for(var i=0;i<legend.length;i++){
-									var el = document.getElementById("statra_txt_legend_"+$scope.unique+"_"+i)
-									if(el){								
-										$(el).text(legend[i][$scope.legendvalue]);
-									}
+								var xp = 0
+								var el 
+								for(var i=0;i<legend.length;i++){																		
 									el = document.getElementById("statra_rect_legend_"+$scope.unique+"_"+i)
 									if(el){								
 										$(el).attr("fill", legend[i].col)
+										$(el).attr("x", xp)										
+										xp += el.getBoundingClientRect().width + 5
 									}
+									el = document.getElementById("statra_txt_legend_"+$scope.unique+"_"+i)
+									if(el){								
+										$(el).text(legend[i][$scope.legendvalue]);
+										$(el).attr("x", xp)
+										xp +=el.getBoundingClientRect().width + 5
+									}									
 								}
 							}							
 						}
