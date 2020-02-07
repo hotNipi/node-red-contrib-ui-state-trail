@@ -203,7 +203,8 @@ module.exports = function (RED) {
 					var ret = []
 					for(i = 0;i<config.states.length;i++){
 						p = (100*sum[config.states[i].state]/total).toFixed(2) + "%"
-						ret.push({name:config.states[i].state.toString(),col:config.states[i].col,val:formatTime(sum[config.states[i].state],true),per:p})
+						var n = config.states[i].label == "" ? config.states[i].state.toString() : config.states[i].label
+						ret.push({name:n,col:config.states[i].col,val:formatTime(sum[config.states[i].state],true),per:p})
 					}
 					return ret
 				}

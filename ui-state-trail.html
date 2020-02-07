@@ -106,7 +106,7 @@ SOFTWARE.
             height: {value: 0},
             name: {value: ''},
             label:{value: ''},
-            states:{value:[{state:true,col:"#009933",t:"bool"},{state:false,col:"#999999",t:"bool"}],
+            states:{value:[{state:true,col:"#009933",t:"bool",label:''},{state:false,col:"#999999",t:"bool",label:''}],
                     validate: function(v) {
                         configError = ""
                         var unique = [...new Set(v.map(s => s.state))]
@@ -144,7 +144,7 @@ SOFTWARE.
                 return colors[idx]
             }
             function defaultRule(idx){
-                return {state:true,col:getColor(idx),t:"bool"}
+                return {state:true,col:getColor(idx),t:"bool",label:''}
             }
             
             function ruleInfo(error){                 
@@ -199,6 +199,7 @@ SOFTWARE.
                 header: $("<div>").css({padding:"6px"}).append($.parseHTML(`
                     <div style='width:120px; text-align:center; display: inline-grid'><b>State</b></div> 
                     <div style='width:80px; text-align:center; display: inline-grid'><b>Color</b></div>
+                    <div style='width:160px; text-align:center; display: inline-grid'><b>Label</b></div>
                     <div id='error-ruleinfo' style='width:220px; color:red; text-align:center; font-weight:bold; display:inline-grid'></div>  
                     `)),
                 addItem: function(container, index, rule) {                    
@@ -213,15 +214,21 @@ SOFTWARE.
                    
                     var propField
                     var colorField
+                    var labelField
 
                     propField = $('<input/>',{class:"node-input-rule-state-value",style:"width:120px;",type:"text" })
                         .appendTo(row)
                         .typedInput({types:['bool','str','num']});                       
 
                     colorField = $('<input/>',{value:rule.col, class:"node-input-rule-state-color",style:"width:80px; margin-left:8px;",type:"color"})                    
-                        .appendTo(row)               
+                        .appendTo(row)
+                    
+                    labelField = $('<input/>',{class:"node-input-rule-state-label",style:"width:160px; margin-left:8px;",type:"text"})                    
+                        .appendTo(row)
+                        .typedInput({types:['str']});   
                    
                     propField.typedInput('value',rule.state);
+                    labelField.typedInput('value',rule.label)
                     propField.typedInput('type',rule.t);
                     propField.typedInput().on('change', function(type, value) {
                        if(configError == ERR_UNIQUE){
@@ -242,13 +249,14 @@ SOFTWARE.
             });
 
             if (!this.states) {
-                var rbt = {state:true,col:"#009933",t:'bool'};
-                var rbf = {state:false,col:"#999999",t:'bool'};
+                var rbt = {state:true,col:"#009933",t:'bool',label:''};
+                var rbf = {state:false,col:"#999999",t:'bool',label:''};
 
                 this.states = [rbt,rbf];
             }
             for (var i=0; i<this.states.length; i++) {
                 var rule = this.states[i];
+                console.log(rule)
                 $("#node-input-rule-container").editableList('addItem',rule);
             }           
             ruleInfo(configError)         
@@ -278,7 +286,8 @@ SOFTWARE.
                 var st = rule.find(".node-input-rule-state-value").typedInput('value')                
                 var tp = rule.find(".node-input-rule-state-value").typedInput('type')
                 var co = rule.find(".node-input-rule-state-color").val();
-                var r = convert({state:st,col:co,t:tp})
+                var lb = rule.find(".node-input-rule-state-label").typedInput('value')
+                var r = convert({state:st,col:co,t:tp,label:lb})
                 node.states.push(r);
                
             });
