@@ -398,7 +398,8 @@ module.exports = function (RED) {
 					var current = storage[idx]
 					var next = storage[idx+1]
 					var dur = next.time - current.time
-					var ret = {state:current.state,time:current.time,duration:dur}
+					var lab = config.states.find(s => s.state == current.state).label
+					var ret = {state:current.state,time:current.time,duration:dur,label:lab}
 					return ret
 				}
 
