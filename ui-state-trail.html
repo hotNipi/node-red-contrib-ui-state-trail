@@ -314,7 +314,7 @@ SOFTWARE.
     <h2>States</h2>
     <p>Configure at least 2 states. Type of state can be <code>string</code>, <code>number</code> or <code>boolean</code>.  
         States can be configured with mixing the types. States <code>true</code> (boolean) and <code>"true"</code> (string) treated as different states. 
-    
+    <p>Optionally you can configure label for each state. If configured, the legend shows the label instead of state.
     <h2>Blank label</h2>
     <p>Text to show when there is not yet enough data to display the chart.
     
@@ -347,6 +347,14 @@ SOFTWARE.
                 
     </dl>
 </br>
+
+<h2>Output</h2>
+
+<p>By clicking the chart bar, the widget sends message. 
+Output msg contains clicked state in <code>msg.payload</code> 
+and coordinates of click in <code>msg.clickCoordinates</code>
+
+
 <h2>Data Storage</h2>
 <p>After a full re-deploy, Node-RED restart or system reboot, the node will lose it's saved chart data, 
 unless the user has selected the 'Data Storage' option (checkbox) AND enabled a persistent form of 
