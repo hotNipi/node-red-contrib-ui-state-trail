@@ -403,8 +403,10 @@ module.exports = function (RED) {
 					return ret
 				}
 
-				generateOutMessage = function(evt){					
-					return {payload:getStateFromCoordinates(evt.targetX) ,clickCoordinates:evt}
+				generateOutMessage = function(evt){	
+					var pl = getStateFromCoordinates(evt.targetX)
+					delete evt.targetX
+					return {payload:pl ,clickCoordinates:evt}
 				}
 				
 				var group = RED.nodes.getNode(config.group);
