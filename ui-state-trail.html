@@ -306,6 +306,8 @@ SOFTWARE.
   
     <h2>Period</h2>
     <p>Time period. If configured to long period, keep input rate low. Too much data may harm performance significantly.
+    <p>Configured period can be overrided by using <code>msg.control.period</code> property. The value for period should be given in milliseconds.
+    <p>For example to set period to 5 minutes, send <code>msg.control.period = 300000</code>
         
 
     <h2>Time format and Ticks</h2>
@@ -339,12 +341,18 @@ SOFTWARE.
             <code>msg.payload = {state:true,timestamp:1579362774639}</code>  
         </dd>
         <br>
+       <dd> Historical data can be also feed in within an array
+<code>msg.payload = [{state:true,timestamp:1579362774639},</code><code>{state:false,timestamp:1579362795665},</code><code>{state:true,timestamp:1579362895432}]</code>
+       </dd>
+       <br>
+       <dd> 
+            Note, that feeding data in array will clear previous set of data!
+       </dd>
+       <br>
         <dd>    
             To clear the the data, send an empty array
             <code>msg.payload = []</code>  
-        </dd>
-
-                
+        </dd>                
     </dl>
 </br>
 

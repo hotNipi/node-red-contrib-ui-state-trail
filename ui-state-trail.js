@@ -109,6 +109,7 @@ module.exports = function (RED) {
 			var getColor = null;
 			var formatTime = null;
 			var validType = null;
+			var validObject = null;
 			var storage = null;
 			var storeInContext = null;
 			var prepareStorage = null;
@@ -121,24 +122,41 @@ module.exports = function (RED) {
 	
 			if (checkConfig(node, config)) {
 				
-				checkPayload = function (input){
+				checkPayload = function (input){					
 					var ret = null
 					if(Array.isArray(input)){
-						return []
+						if(input.length == 0){
+							return []
+						}
+						if(input.every(ob => validObject(ob))){
+							return input
+						}
+						else{
+							return []
+						}						
 					}					
 					if(typeof input === 'object' && input !== null){
-						if(input.hasOwnProperty('state') && input.hasOwnProperty("timestamp")){
+						if(validObject(input)){
 							if(validType(input.state)){								
-								ret = {state:input.state,time:input.timestamp}
+								ret = {state:input.state,timestamp:input.timestamp}
 							}
 						}
 					}
 					else{
 						if(validType(input)){
-							ret = {state:input,time:new Date().getTime()}
+							ret = {state:input,timestamp:new Date().getTime()}
 						}
 					}													
 					return ret
+				}
+				validObject = function (input){					
+					if(input == undefined){
+						return false
+					}
+					if(input.hasOwnProperty('state') && input.hasOwnProperty("timestamp")){
+						return true
+					}
+					return false
 				}
 				validType = function (input) {
 					for(var i = 0;i<config.states.length;i++){
@@ -149,36 +167,42 @@ module.exports = function (RED) {
 					return false
 				}
 
-				store = function (val){										
+				store = function (val){														
 					if(Array.isArray(val)){
-						storage = []
-						config.max = new Date().getTime() 
-						config.min = config.max - config.period
-						storeInContext()
-						return						
+						if(val.length == 0){
+							storage = []
+							config.max = new Date().getTime() 
+							config.min = config.max - config.period
+							storeInContext()
+							return
+						}
+						else{
+							storage = val
+							val = storage[storage.length - 1]
+						}																	
 					}			
 					if(storage.length == 0){
 						storage.push(val)						
 					}					
 					else{
 						var temp = [...storage]
-						temp = temp.filter(el => el.time != val.time)						
+						temp = temp.filter(el => el.timestamp != val.timestamp)						
 						temp.push(val)											
-						temp = temp.sort((a, b) => a.time - b.time)
+						temp = temp.sort((a, b) => a.timestamp - b.timestamp)
 						var idx = temp.length - 1
 						if(idx > 1){
 							if(temp[idx-2].state === temp[idx-1].state){
 								temp.splice(idx-1,1)
 							}
 						}
-						var time = temp[temp.length -1].time - config.period
-						temp = temp.filter(el => el.time > time);
+						var time = temp[temp.length -1].timestamp - config.period
+						temp = temp.filter(el => el.timestamp > time);
 						storage = temp																									
 					}
 										
-					config.min = storage[0].time
-					config.insidemin = storage.length < 3 ? config.min :  storage[1].time
-					config.max = storage[storage.length - 1].time					
+					config.min = storage[0].timestamp
+					config.insidemin = storage.length < 3 ? config.min : storage[1].timestamp
+					config.max = storage[storage.length - 1].timestamp					
 					showInfo()	
 					storeInContext()					
 				}
@@ -196,7 +220,7 @@ module.exports = function (RED) {
 						}
 					}
 					for(i = 1;i<len;i++){
-						z = storage[i].time - storage[i-1].time					
+						z = storage[i].timestamp - storage[i-1].timestamp					
 						sum[storage[i-1].state] += z
 						total += z
 					}
@@ -260,7 +284,7 @@ module.exports = function (RED) {
 					ret.push(o)			
 					var i
 					var po
-					po = getPosition(storage[1].time,config.insidemin,config.max)
+					po = getPosition(storage[1].timestamp,config.insidemin,config.max)
 					for(i = 1;i<storage.length-1;i++){						
 						if(isNaN(po)){
 							continue
@@ -269,7 +293,7 @@ module.exports = function (RED) {
 						ret.push(o)						
 						o = {p:po,c:getColor(storage[i].state),a:1}
 						ret.push(o)
-						po = getPosition(storage[i+1].time,config.insidemin,config.max)
+						po = getPosition(storage[i+1].timestamp,config.insidemin,config.max)
 					}
 					o = {p:config.stripe.right,c:getColor(storage[storage.length-2].state),a:1}
 					ret.push(o) 
@@ -324,7 +348,7 @@ module.exports = function (RED) {
 					var total = config.max - config.min
 					var step = (total / (config.tickmarks-1))
 					for (let i = 0; i < config.tickmarks; i++) {
-						t = storage[0].time + (step*i)						 					
+						t = storage[0].timestamp + (step*i)						 					
 						po = getPosition(t,config.min,config.max) 
 						o = {x:po,v:formatTime(t),id:i}					
 						ret.push(o) 						
@@ -393,13 +417,13 @@ module.exports = function (RED) {
 					var time = getTimeFromPos(c,config.stripe.mousemin,config.stripe.mousemax)
 					
 					var idx = -1 + storage.findIndex(function(state) {
-						return state.time > time;
+						return state.timestamp > time;
 					})
 					var current = storage[idx]
 					var next = storage[idx+1]
-					var dur = next.time - current.time
+					var dur = next.timestamp - current.timestamp
 					var lab = config.states.find(s => s.state == current.state).label
-					var ret = {state:current.state,time:current.time,duration:dur,label:lab}
+					var ret = {state:current.state,timestamp:current.timestamp,end:next.timestamp,duration:dur,label:lab}
 					return ret
 				}
 
@@ -433,7 +457,7 @@ module.exports = function (RED) {
 				storage = (config.persist && stroageSpace != null) ? ctx.get('stateTrailStorage',stroageSpace) || [] : []	
 				config.max = (config.persist && stroageSpace != null) ? ctx.get('stateTrailMax',stroageSpace) || new Date().getTime() : new Date().getTime()
 				config.min = (config.persist && stroageSpace != null) ? ctx.get('stateTrailMin',stroageSpace) || (config.max - config.period) : (config.max - config.period)
-				config.insidemin = storage.length < 3 ? config.min :  storage[1].time
+				config.insidemin = storage.length < 3 ? config.min :  storage[1].timestamp
 								
 				storeInContext(true)				
 				
@@ -453,11 +477,14 @@ module.exports = function (RED) {
 					forwardInputMessages: false,					
 					storeFrontEndInputAsState: true,
 					
-					beforeEmit: function (msg) {
+					beforeEmit: function (msg) {											
+						if(msg.control && msg.control.period){
+							config.period = parseInt(msg.control.period)
+						} 
 						if(msg.payload === undefined){
-							return 
-						}
-						var validated = checkPayload(msg.payload)												
+							return {}
+						}						
+						var validated = checkPayload(msg.payload)																	
 						if(validated === null){
 							return {}
 						}
@@ -618,7 +645,7 @@ module.exports = function (RED) {
 							}
 					   	}								
 						
-						$scope.$watch('msg', function (msg) {
+						$scope.$watch('msg', function (msg) {							
 							if (!msg) {								
 								return;
 							}							

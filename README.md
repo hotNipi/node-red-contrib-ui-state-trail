@@ -19,6 +19,11 @@ To show label configure widget height to 2 units.
   
 ### Period
 Time period. If configured to long period, keep input rate low. Too much data may harm performance significantly.
+
+Configured period can be overrided by using <code>msg.control.period</code> property.
+The value for period should be given in milliseconds. 
+
+For example to set period to 5 minutes, send <code>msg.control.period = 300000</code>
         
 
 ### Time format and Ticks
@@ -44,7 +49,14 @@ To show the legend, tick the checkbox and widget height must be configured to 2 
 If you want to use the widget to show historical data, you need to pass in every state together with its timestamp. 
 <code>msg.payload = {state:true,timestamp:1579362774639}</code>
 
+Historical data can be also feed in within an array
+<code>msg.payload = [{state:true,timestamp:1579362774639},{state:false,timestamp:1579362795665},{state:true,timestamp:1579362895432}]</code>
+
+Note, that feeding data in array will clear previous set of data!
+
 To clear the data, send an empty array <code>msg.payload = []</code> 
+
+
 
 ### Output
 
