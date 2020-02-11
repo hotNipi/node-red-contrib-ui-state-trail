@@ -118,6 +118,7 @@ module.exports = function (RED) {
 			var collectSummary = null;
 			var getStateFromCoordinates = null;
 			var generateOutMessage = null;
+			var addToStore = null;
 			var ctx = node.context()
 	
 			if (checkConfig(node, config)) {
@@ -167,7 +168,30 @@ module.exports = function (RED) {
 					return false
 				}
 
-				store = function (val){														
+				addToStore = function(s){					
+					if(storage.length > 0){
+						var temp = [...storage]
+						temp = temp.filter(el => el.timestamp != s.timestamp)
+						temp.push(s)
+						temp = temp.sort((a, b) => a.timestamp - b.timestamp)					
+						if(config.combine){
+							var idx = temp.length - 1
+							if(idx > 1){
+								if(temp[idx-2].state === temp[idx-1].state){
+									temp.splice(idx-1,1)
+								}
+							}
+						}																	
+						var time = temp[temp.length -1].timestamp - config.period
+						temp = temp.filter(el => el.timestamp > time);
+						storage = temp						
+					}else{
+						storage.push(s)	
+					}
+					
+				}
+
+				store = function (val){																		
 					if(Array.isArray(val)){
 						if(val.length == 0){
 							storage = []
@@ -177,31 +201,18 @@ module.exports = function (RED) {
 							return
 						}
 						else{
-							storage = val
-							val = storage[storage.length - 1]
+							storage = []
+							val.forEach(s => addToStore(s))							
 						}																	
-					}			
-					if(storage.length == 0){
-						storage.push(val)						
-					}					
+					}				
 					else{
-						var temp = [...storage]
-						temp = temp.filter(el => el.timestamp != val.timestamp)						
-						temp.push(val)											
-						temp = temp.sort((a, b) => a.timestamp - b.timestamp)
-						var idx = temp.length - 1
-						if(idx > 1){
-							if(temp[idx-2].state === temp[idx-1].state){
-								temp.splice(idx-1,1)
-							}
-						}
-						var time = temp[temp.length -1].timestamp - config.period
-						temp = temp.filter(el => el.timestamp > time);
-						storage = temp																									
-					}
-										
+						addToStore(val)																				
+					}				
 					config.min = storage[0].timestamp
-					config.insidemin = storage.length < 3 ? config.min : storage[1].timestamp
+					config.insidemin = config.min
+					if(storage.length > 2){
+						config.insidemin = storage[1].timestamp
+					}					
 					config.max = storage[storage.length - 1].timestamp					
 					showInfo()	
 					storeInContext()					
@@ -459,7 +470,7 @@ module.exports = function (RED) {
 				config.min = (config.persist && stroageSpace != null) ? ctx.get('stateTrailMin',stroageSpace) || (config.max - config.period) : (config.max - config.period)
 				config.insidemin = storage.length < 3 ? config.min :  storage[1].timestamp
 								
-				storeInContext(true)				
+				storeInContext(true)
 				
 				config.initial = {stops:generateGradient(),ticks:generateTicks(),legend:collectSummary()}
 				

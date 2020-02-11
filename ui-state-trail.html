@@ -72,6 +72,12 @@ SOFTWARE.
             style="display:inline-block; width:auto; vertical-align:baseline; 
             margin-right:5px;margin-left:5px;">Use persistable storage if available
 </div>
+<div class='form-row' id='node-input-performance'>
+    <label for='node-input-persist'><i class='icon-tag'></i> Performance</label>
+    <input type="checkbox" checked id="node-input-combine" 
+            style="display:inline-block; width:auto; vertical-align:baseline; 
+            margin-right:5px;margin-left:5px;">Combine similar states
+</div>
 <div class='form-row' id='node-input-bl-label'>
     <label for='node-input-blanklabel'><i class='icon-tag'></i> Blank label</label>
     <input type='text' id='node-input-blanklabel' placeholder='Waiting data'>
@@ -126,6 +132,7 @@ SOFTWARE.
             tickmarks:{val:4, required: true},
             persist:{val:false, required: true},
             legend:{val:false, required: true},
+            combine:{val:true, required: true},
             blanklabel:{value: ''}                    
         },
         inputs:1,
@@ -172,6 +179,9 @@ SOFTWARE.
             }
             if (this.legend === undefined) {
                 $("#node-input-legend").prop('checked', false);
+            } 
+            if (this.combine === undefined) {
+                $("#node-input-keepall").prop('checked', true);
             }  
            
             var oval = $("#node-input-timeformat").val();
@@ -322,6 +332,10 @@ SOFTWARE.
     
     <h2>Legend</h2>
     <p>To show the legend, tick the checkbox and widget height must be configured to 2 units. By clicking the legend on dashboard, you can toggle between names and summary. Summary shows aggregated time or percentage for each state.
+
+    <h2>Combine similar states</h2>
+    <p>By default, the node combines states with same value. You could turn this behavior off, if you wanted to keep your data as it was provided. Visually there is no difference, but all consecutive similar states will be individually clickable.
+        If you don't use click option, it is recommended to keep this option selected. For large amounts of data, combining the states helps to gain performance.
 
 </br>
 </br>

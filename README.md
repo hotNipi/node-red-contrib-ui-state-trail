@@ -41,6 +41,10 @@ Text to show when there is not yet enough data to display the chart.
 ### Legend
 To show the legend, tick the checkbox and widget height must be configured to 2 units. By clicking the legend on dashboard, you can toggle between names and summary. Summary shows aggregated time or percentage for each state.
 
+### Combine similar states
+By default, the node combines states with same value. You could turn this behavior off, if you wanted to keep your data as it was provided. Visually there is no difference, but all consecutive similar states will be individually clickable.
+If you don't use click option, it is recommended to keep this option selected. For large amounts of data, combining the states helps to gain performance.
+
 ### Input
         
 <code>msg.payload</code> should carry single value of one of configured states
