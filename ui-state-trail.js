@@ -547,7 +547,12 @@ module.exports = function (RED) {
 					beforeEmit: function (msg) {											
 						if(msg.control && msg.control.period){
 							config.period = parseInt(msg.control.period)
-						} 
+						}
+						if(msg.control && msg.control.states){
+							if(Array.isArray(msg.control.states)){
+								config.states = msg.control.states
+							}							
+						}  
 						if(msg.payload === undefined){
 							return {}
 						}						
@@ -660,7 +665,12 @@ module.exports = function (RED) {
 							if(!g){
 								return
 							}
-							$scope.legend = legend							
+							$scope.legend = legend
+							if(g.children.length *2 != $scope.legend.length ){								
+								while (g.firstChild) {
+									g.removeChild(g.firstChild);
+								}								
+							}							
 							var xp = 0
 							if(g.children.length == 0){
 								var rect
