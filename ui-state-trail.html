@@ -334,8 +334,10 @@ SOFTWARE.
     <p>To show the legend, tick the checkbox and widget height must be configured to 2 units. By clicking the legend on dashboard, you can toggle between names and summary. Summary shows aggregated time or percentage for each state.
 
     <h2>Combine similar states</h2>
-    <p>By default, the node combines states with same value. You could turn this behavior off, if you wanted to keep your data as it was provided. Visually there is no difference, but all consecutive similar states will be individually clickable.
-        If you don't use click option, it is recommended to keep this option selected. For large amounts of data, combining the states helps to gain performance.
+    <p>By default, the node combines consecutive states if they have same value. You could turn this behavior off, if you wanted to present your data as it was provided. 
+        Doing so, the consecutive similar states will be splitted with thin lines, and all those states will be individually clickable.
+        If splitting the consecutive similar states is not intentional or if you don't use click option, it is recommended to keep this option selected. 
+        For large amounts of data, combining the states helps to gain performance.
 
 </br>
 </br>

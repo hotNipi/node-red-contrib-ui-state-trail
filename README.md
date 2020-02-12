@@ -42,8 +42,10 @@ Text to show when there is not yet enough data to display the chart.
 To show the legend, tick the checkbox and widget height must be configured to 2 units. By clicking the legend on dashboard, you can toggle between names and summary. Summary shows aggregated time or percentage for each state.
 
 ### Combine similar states
-By default, the node combines states with same value. You could turn this behavior off, if you wanted to keep your data as it was provided. Visually there is no difference, but all consecutive similar states will be individually clickable.
-If you don't use click option, it is recommended to keep this option selected. For large amounts of data, combining the states helps to gain performance.
+By default, the node combines consecutive states if they have same value. You could turn this behavior off, if you wanted to present your data as it was provided. 
+Doing so, the consecutive similar states will be splitted with thin lines, and all those states will be individually clickable.
+If splitting the consecutive similar states is not intentional or if you don't use click option, it is recommended to keep this option selected. 
+For large amounts of data, combining the states helps to gain performance.
 
 ### Input
         
@@ -53,8 +55,13 @@ If you don't use click option, it is recommended to keep this option selected. F
 If you want to use the widget to show historical data, you need to pass in every state together with its timestamp. 
 <code>msg.payload = {state:true,timestamp:1579362774639}</code>
 
-Historical data can be also feed in within an array
+Historical data can be also feed within an array
+
 <code>msg.payload = [{state:true,timestamp:1579362774639},{state:false,timestamp:1579362795665},{state:true,timestamp:1579362895432}]</code>
+
+State data can also have the end time. In this case, if next state starts later than the end time, then there will be gap between states in case of combining the states is turned off.
+
+<code>{"state": true,"timestamp": 1581404193000,"end":1581404198000}</code>
 
 Note, that feeding data in array will clear previous set of data!
 

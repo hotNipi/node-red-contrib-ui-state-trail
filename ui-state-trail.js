@@ -25,7 +25,8 @@ SOFTWARE.
 
 module.exports = function (RED) {
 	function HTML(config) {
-		var data = JSON.stringify(config.initial);	
+		var data = JSON.stringify(config.initial);
+		var sizes = JSON.stringify(config.stripe);	
 		var styles = String.raw`
 		
 		<style>
@@ -38,11 +39,18 @@ module.exports = function (RED) {
 			}
 			.statra-{{unique}}.legend{
 				cursor:pointer;
-			}				
+			}
+			.statra-{{unique}}.split{
+				fill:${config.bgrColor};
+				
+				outline: none;
+				stroke:none;
+				border: 0
+			}								
 		</style>`
 		var gradient = String.raw`fill="url(#statra_gradi_{{unique}})"`		
 		var layout = String.raw`		
-			<svg preserveAspectRatio="xMidYMid meet" id="statra_svg_{{unique}}" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg" ng-init='init(`+data+`)'>
+			<svg preserveAspectRatio="xMidYMid meet" id="statra_svg_{{unique}}" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg" ng-init='init(`+data+`,`+sizes+`)'>
 				<defs>
 					<linearGradient id="statra_gradi_{{unique}}" x2="100%" y2="0%">
 					
@@ -63,9 +71,10 @@ module.exports = function (RED) {
 					<tspan id="statra_blank_{{unique}}" class="txt-{{unique}}" text-anchor="middle" dominant-baseline="hanging" x=`+config.exactwidth/2+` y="`+config.stripe.y+`%">
 						`+config.blanklabel+`
 					</tspan>
-				</text>	
+				</text>
+				
 				<rect id="statra_{{unique}}" ng-click='onClick($event)' x="`+config.stripe.x+`" y="`+config.stripe.y+`%" width="`+config.exactwidth+`" height="`+config.stripe.height+`" style="stroke:none; outline: none; cursor:pointer;" ${gradient}/>	
-			
+				<g class="statra-{{unique}} split" id="statra_splitters_{{unique}}" ng-if="${!config.combine}" style="outline: none; border: 0;" transform="translate(0, ${config.stripe.y -2})"></g>	
 				<text ng-repeat="x in [].constructor(${config.tickmarks}) track by $index" id=statra_tickval_{{unique}}_{{$index}} 
 				class="txt-{{unique}} small" text-anchor="middle" dominant-baseline="baseline"
 				 y="95%"></text>
@@ -110,7 +119,7 @@ module.exports = function (RED) {
 			var formatTime = null;
 			var validType = null;
 			var validObject = null;
-			var storage = null;
+			var storage = null;			
 			var storeInContext = null;
 			var prepareStorage = null;
 			var stroageSpace = null;
@@ -119,6 +128,8 @@ module.exports = function (RED) {
 			var getStateFromCoordinates = null;
 			var generateOutMessage = null;
 			var addToStore = null;
+			var findSplitters = null;
+			var splitters = [];
 			var ctx = node.context()
 	
 			if (checkConfig(node, config)) {
@@ -168,6 +179,33 @@ module.exports = function (RED) {
 					return false
 				}
 
+				findSplitters = function(){
+					function checkSpilt(el,idx,arr){
+						if(idx > 0){
+							if(el.state == arr[idx-1].state){
+								splitters.push({x:getPosition(el.timestamp,config.insidemin,config.max),width:'1px'})
+							}
+							if(idx < arr.length - 2){
+								if(el.hasOwnProperty('end')){
+									var diff = arr[idx+1].timestamp - el.end 
+									if(diff < 0){
+										node.warn("overlapping states not supported!")										
+									}									
+									if(diff > 0){
+										// gap
+										var xp = getPosition(el.end,config.insidemin,config.max)
+										var nxp = getPosition(arr[idx+1].timestamp,config.insidemin,config.max)
+										var wp = nxp - xp
+										splitters.push({x:xp,width:wp+'%'})
+									}									
+								}
+							}
+							
+						} 
+					}
+					storage.forEach(checkSpilt)
+				}
+
 				addToStore = function(s){					
 					if(storage.length > 0){
 						var temp = [...storage]
@@ -181,14 +219,14 @@ module.exports = function (RED) {
 									temp.splice(idx-1,1)
 								}
 							}
-						}																	
+						}																						
 						var time = temp[temp.length -1].timestamp - config.period
 						temp = temp.filter(el => el.timestamp > time);
-						storage = temp						
-					}else{
-						storage.push(s)	
+						storage = temp											
 					}
-					
+					else{
+						storage.push(s)	
+					}					
 				}
 
 				store = function (val){																		
@@ -207,7 +245,8 @@ module.exports = function (RED) {
 					}				
 					else{
 						addToStore(val)																				
-					}				
+					}
+										
 					config.min = storage[0].timestamp
 					config.insidemin = config.min
 					if(storage.length > 2){
@@ -224,6 +263,7 @@ module.exports = function (RED) {
 					var total = 0
 					var z = 0
 					var p = 0
+					var trail = 0
 					var len = storage.length
 					for(i = 0;i<config.states.length;i++){
 						if(!sum.hasOwnProperty(config.states[i].state)){
@@ -231,8 +271,13 @@ module.exports = function (RED) {
 						}
 					}
 					for(i = 1;i<len;i++){
-						z = storage[i].timestamp - storage[i-1].timestamp					
-						sum[storage[i-1].state] += z
+						trail = 0
+						if(storage[i-1].hasOwnProperty('end')){
+							trail = storage[i-1].end - storage[i-1].timestamp
+						}
+
+						z = storage[i].timestamp - storage[i-1].timestamp - trail				
+						sum[storage[i-1].state] += z 
 						total += z
 					}
 					var ret = []
@@ -286,6 +331,8 @@ module.exports = function (RED) {
 				
 				generateGradient = function(){
 					var ret = []
+					splitters = []
+					
 					if(storage.length < 2){
 						return ret
 					}
@@ -312,7 +359,9 @@ module.exports = function (RED) {
 					ret.push(o) 
 					o = {p:100,c:getColor(storage[storage.length-1].state),a:0}
 					ret.push(o) 
-					
+					if(!config.combine){
+						findSplitters()	
+					}
 					return ret
 				}
 				formatTime = function(stamp,utc){
@@ -425,11 +474,17 @@ module.exports = function (RED) {
 					if(c > config.stripe.mousemax || c < config.stripe.mousemin){						
 						return null
 					}
+					if(storage.length == 0){
+						return null
+					}
 					var time = getTimeFromPos(c,config.stripe.mousemin,config.stripe.mousemax)
 					
 					var idx = -1 + storage.findIndex(function(state) {
 						return state.timestamp > time;
 					})
+					if(idx == -1){
+						return null
+					}
 					var current = storage[idx]
 					var next = storage[idx+1]
 					var dur = next.timestamp - current.timestamp
@@ -471,9 +526,10 @@ module.exports = function (RED) {
 				config.insidemin = storage.length < 3 ? config.min :  storage[1].timestamp
 								
 				storeInContext(true)
+				config.bgrColor = site.theme['widget-borderColor'].value
 				
-				config.initial = {stops:generateGradient(),ticks:generateTicks(),legend:collectSummary()}
-				
+				config.initial = {stops:generateGradient(),ticks:generateTicks(),legend:collectSummary(),splits:splitters}
+
 				var html = HTML(config);		
 
 				done = ui.addWidget({
@@ -500,8 +556,7 @@ module.exports = function (RED) {
 							return {}
 						}
 						store(validated)
-						
-						msg.payload = {stops:generateGradient(),ticks:generateTicks(),legend:collectSummary()}
+						msg.payload = {stops:generateGradient(),ticks:generateTicks(),legend:collectSummary(),splits:splitters}
 						return { msg };
 					},
 					beforeSend: function (msg, orig) {
@@ -523,13 +578,21 @@ module.exports = function (RED) {
 						$scope.legendvalues = ['name','val','per']
 						$scope.legendvalue = 'name'
 						$scope.legend = null
+						$scope.sizes = null
+						$scope.mouselock = 0
 						
-						$scope.init = function(data){
+						$scope.init = function(data,sizes){
+							$scope.sizes = sizes
 							update(data)
 						}
 
 						$scope.onClick = function(e){							
-							//console.log(e)
+							if($scope.mouselock < 2){
+								return
+							}
+							if(e.originalEvent.offsetX < $scope.sizes.mousemin || e.originalEvent.offsetX > $scope.sizes.mousemax){
+								return
+							}							
 							var coord = {
 								screenX: e.originalEvent.screenX,
 								screenY: e.originalEvent.screenY,
@@ -561,6 +624,32 @@ module.exports = function (RED) {
 							updateGradient(data.stops)
 							updateTicks(data.ticks)
 							updateLegend(data.legend)
+							updateSplitters(data.splits)
+						}
+
+						var updateSplitters = function (splits){
+							if(!splits){
+								return
+							}
+							var g =  document.getElementById("statra_splitters_"+$scope.unique);
+							if(!g){
+								return
+							}
+							if(g.children.length > 0){
+								while (g.firstChild) {
+									g.removeChild(g.firstChild);
+								}
+							}
+							var split							
+							for(var i=0;i<splits.length;i++){
+								split = document.createElementNS($scope.svgns, 'rect');
+								split.setAttribute('id','statra_split_'+$scope.unique+"_"+i)
+								split.setAttribute('x',splits[i].x+'%');
+								split.setAttribute('y','0%');
+								split.setAttribute('width',splits[i].width);
+								split.setAttribute('height',$scope.sizes.height);
+								document.getElementById("statra_splitters_"+$scope.unique).appendChild(split);
+							}							
 						}
 
 						var updateLegend = function (legend){
@@ -623,6 +712,7 @@ module.exports = function (RED) {
 						var updateGradient = function (stops){
 	 						var gradient = document.getElementById("statra_gradi_"+$scope.unique);
 							var stop
+							$scope.mouselock = stops.length
 							if(gradient){								
 								while(gradient.childNodes.length > 0){
 									gradient.removeChild(gradient.firstChild)
