@@ -129,6 +129,7 @@ module.exports = function (RED) {
 			var generateOutMessage = null;
 			var addToStore = null;
 			var findSplitters = null;
+			var isValidStateConf = null;
 			var splitters = [];
 			var ctx = node.context()
 	
@@ -178,6 +179,29 @@ module.exports = function (RED) {
 					}
 					return false
 				}
+				isValidStateConf = function(input){
+					var hasAllProps = function(el){
+						return (
+						el.hasOwnProperty('state') &&
+						el.hasOwnProperty('col') &&
+						el.hasOwnProperty('t') &&
+						el.hasOwnProperty('label'))
+					}
+					if(Array.isArray(input)){						
+						if(input.length > 1){
+							if(input.every(hasAllProps)){														
+								var unique = [...new Set(input.map(s => s.state))]								
+								if(unique.length == input.length){
+									return true
+								}
+							}							
+						}
+					}
+					node.warn('configuration for states is not valid!')
+					return false
+				}
+
+				
 
 				findSplitters = function(){
 					function checkSpilt(el,idx,arr){
@@ -549,7 +573,7 @@ module.exports = function (RED) {
 							config.period = parseInt(msg.control.period)
 						}
 						if(msg.control && msg.control.states){
-							if(Array.isArray(msg.control.states)){
+							if(isValidStateConf(msg.control.states)){							
 								config.states = msg.control.states
 							}							
 						}  

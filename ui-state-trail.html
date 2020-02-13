@@ -386,6 +386,50 @@ context storage in the Node-RED settings.js file. In that case, the node will at
 the data as it was prior to the re-deploy, restart or reboot.
 <p>See the node-RED user guide to configure persistent 
 storage - <a href="https://nodered.org/docs/user-guide/context#saving-context-data-to-the-file-system">https://nodered.org/docs/user-guide/context#saving-context-data-to-the-file-system</a>
-  
+ 
+
+<br>
+<h3>Change the configuration at runtime</h3>
+
+<p>Some options of widget configuration can be overrided at runtime
+<p>Usage of <code>msg.options</code> property 
+
+<h2>Change configured period</h2>
+Configured period can be overrided by using <code>msg.control.period</code> property.
+The value for period should be given in milliseconds. 
+
+For example to set period to 5 minutes, send 
+<code>
+msg.control.period = 300000
+</code>
+
+<h2>Change the states</h2>
+
+<p>All states can be overrided by using <code>msg.control.states</code> property. Note that you can't adjust or change any of configured states individually.
+
+<p><b>All states must be unique!</b>
+
+<p>New states expected to be sent in <code>array</code> of <code>objects</code>
+<pre>
+var s = [
+    {state:1 ,col:"#009933", t:"num", label:'ONE'},
+    {state:'two', col:"#999999", t:"str", label:'TWO'},
+    {state:false, col:"#00FF99", t:"bool", label:'THREE'}
+]
+msg.control = {states:s}
+</pre>
+Where each <code>object</code> must have all following properties
+<pre>
+state - (number,string,boolean) the state identifier
+col - (hex string) the color of the state
+label - (string) human-friendly name of the state (empty string for no label)
+t - (string) the type of the state.
+   
+values for t can be:
+"num" - number
+"str" - string
+"bool" - boolean
+</pre>
+
     
 </script>

@@ -23,7 +23,10 @@ Time period. If configured to long period, keep input rate low. Too much data ma
 Configured period can be overrided by using <code>msg.control.period</code> property.
 The value for period should be given in milliseconds. 
 
-For example to set period to 5 minutes, send <code>msg.control.period = 300000</code>
+For example to set period to 5 minutes, send 
+``` javascript
+msg.control.period = 300000
+```
         
 
 ### Time format and Ticks
@@ -47,36 +50,97 @@ Doing so, the consecutive similar states will be splitted with thin lines, and a
 If splitting the consecutive similar states is not intentional or if you don't use click option, it is recommended to keep this option selected. 
 For large amounts of data, combining the states helps to gain performance.
 
-### Input
+### Data Storage
+After a full re-deploy, Node-RED restart or system reboot, the node will lose it's saved chart data, unless the user has selected the 'Data Storage' option (checkbox) AND enabled a persistent form of context storage in the Node-RED settings.js file. In that case, the node will attempt to restore the data as it was prior to the re-deploy, restart or reboot.
+
+See the node-RED user guide to configure persistent storage - https://nodered.org/docs/user-guide/context#saving-context-data-to-the-file-system
+
+## Input
         
 <code>msg.payload</code> should carry single value of one of configured states
-<code>msg.payload = true</code> 
+``` javascript
+msg.payload = true
+```
 
 If you want to use the widget to show historical data, you need to pass in every state together with its timestamp. 
-<code>msg.payload = {state:true,timestamp:1579362774639}</code>
+``` javascript
+msg.payload = {state:true,timestamp:1579362774639}
+```
 
 Historical data can be also feed within an array
 
-<code>msg.payload = [{state:true,timestamp:1579362774639},{state:false,timestamp:1579362795665},{state:true,timestamp:1579362895432}]</code>
+``` javascript
+msg.payload = [
+    {state:true,timestamp:1579362774639},
+    {state:false,timestamp:1579362795665},
+    {state:true,timestamp:1579362895432}
+]
+```
 
-State data can also have the end time. In this case, if next state starts later than the end time, then there will be gap between states in case of combining the states is turned off.
+State data can also have the end time. In this case, if next state starts later than the previous state's end time, then there will be gap between states in case of combining the states is turned off.
 
-<code>{"state": true,"timestamp": 1581404193000,"end":1581404198000}</code>
+``` javascript
+{"state": true,"timestamp": 1581404193000,"end":1581404198000}
+```
 
 Note, that feeding data in array will clear previous set of data!
 
-To clear the data, send an empty array <code>msg.payload = []</code> 
+To clear the data, send an empty array 
+``` javascript
+msg.payload = []
+```
 
 
 
-### Output
+## Output
 
 By clicking the chart bar, the widget sends message. Output msg contains clicked state in <code>msg.payload</code> and coordinates of click in <code>msg.clickCoordinates</code> 
 
 ![click-output.JPG](images/click-output.JPG)
  
 
-### Data Storage
-After a full re-deploy, Node-RED restart or system reboot, the node will lose it's saved chart data, unless the user has selected the 'Data Storage' option (checkbox) AND enabled a persistent form of context storage in the Node-RED settings.js file. In that case, the node will attempt to restore the data as it was prior to the re-deploy, restart or reboot.
 
-See the node-RED user guide to configure persistent storage - https://nodered.org/docs/user-guide/context#saving-context-data-to-the-file-system
+
+## Change the configuration at runtime
+
+Some options of widget configuration can be overrided at runtime
+Usage of <code>msg.options</code> property 
+
+### Change configured period
+Configured period can be overrided by using <code>msg.control.period</code> property.
+The value for period should be given in milliseconds. 
+
+For example to set period to 5 minutes, send 
+``` javascript
+msg.control.period = 300000
+```
+
+### Change the states
+
+All states can be overrided by using <code>msg.control.states</code> property. Note that you can't adjust or change any of configured states individually.
+
+**All states must be unique!**
+
+New states expected to be sent in <code>array</code> of <code>objects</code>
+``` javascript
+var s = [
+    {state:1 ,col:"#009933", t:"num", label:'ONE'},
+    {state:'two', col:"#999999", t:"str", label:'TWO'},
+    {state:false, col:"#00FF99", t:"bool", label:'THREE'}
+]
+msg.control = {states:s}
+```
+Where each <code>object</code> must have all following properties
+``` 
+state - (number,string,boolean) the state identifier
+col - (hex string) the color of the state
+label - (string) human-friendly name of the state (empty string for no label)
+t - (string) the type of the state.
+   
+    values for t can be:
+    "num" - number
+    "str" - string
+    "bool" - boolean
+
+```
+
