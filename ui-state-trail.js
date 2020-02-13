@@ -182,14 +182,20 @@ module.exports = function (RED) {
 				isValidStateConf = function(input){
 					var hasAllProps = function(el){
 						return (
+						typeof el === 'object' &&
+						el !== null &&
 						el.hasOwnProperty('state') &&
 						el.hasOwnProperty('col') &&
 						el.hasOwnProperty('t') &&
 						el.hasOwnProperty('label'))
 					}
-					if(Array.isArray(input)){						
+					var e = 3
+					if(Array.isArray(input)){
+						e --						
 						if(input.length > 1){
-							if(input.every(hasAllProps)){														
+							e--
+							if(input.every(hasAllProps)){
+								e--														
 								var unique = [...new Set(input.map(s => s.state))]								
 								if(unique.length == input.length){
 									return true
@@ -197,7 +203,11 @@ module.exports = function (RED) {
 							}							
 						}
 					}
-					node.warn('configuration for states is not valid!')
+					var err = ['States must be unique.',
+					'State object must have all required properties.',
+					'At least 2 states must be configured.',
+					'Expected an array of objects.']					
+					node.warn('Configuration for states is not valid! '+err[e])
 					return false
 				}
 
