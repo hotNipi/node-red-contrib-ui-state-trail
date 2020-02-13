@@ -52,8 +52,7 @@ module.exports = function (RED) {
 		var layout = String.raw`		
 			<svg preserveAspectRatio="xMidYMid meet" id="statra_svg_{{unique}}" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg" ng-init='init(`+data+`,`+sizes+`)'>
 				<defs>
-					<linearGradient id="statra_gradi_{{unique}}" x2="100%" y2="0%">
-					
+					<linearGradient id="statra_gradi_{{unique}}" x2="100%" y2="0%">					
 					</linearGradient>	
 				</defs>
 				<text ng-if="${config.height > 1}">
@@ -64,25 +63,23 @@ module.exports = function (RED) {
 						`+config.label+`
 					</tspan>
 				</text>	
-				<g class="statra-{{unique}} legend" id="statra_legend_{{unique}}" ng-if="${(config.height > 1 && config.legend > 0)}" style="outline: none; border: 0;" ng-click='toggle()'>
-
-				</g>	
+				<g class="statra-{{unique}} legend" id="statra_legend_{{unique}}" ng-if="${(config.height > 1 && config.legend > 0)}" 
+					style="outline: none; border: 0;" ng-click='toggle()'></g>	
 				<text ng-if="${config.blanklabel != ""}" font-style="italic">
-					<tspan id="statra_blank_{{unique}}" class="txt-{{unique}}" text-anchor="middle" dominant-baseline="hanging" x=`+config.exactwidth/2+` y="`+config.stripe.y+`%">
-						`+config.blanklabel+`
-					</tspan>
-				</text>
-				
-				<rect id="statra_{{unique}}" ng-click='onClick($event)' x="`+config.stripe.x+`" y="`+config.stripe.y+`%" width="`+config.exactwidth+`" height="`+config.stripe.height+`" style="stroke:none; outline: none; cursor:pointer;" ${gradient}/>	
-				<g class="statra-{{unique}} split" id="statra_splitters_{{unique}}" ng-if="${!config.combine}" style="outline: none; border: 0;" transform="translate(0, ${config.stripe.y -2})"></g>	
+					<tspan id="statra_blank_{{unique}}" class="txt-{{unique}}" text-anchor="middle" dominant-baseline="hanging" 
+						x=`+config.exactwidth/2+` y="`+config.stripe.y+`%">`+config.blanklabel+`</tspan>
+				</text>				
+				<rect id="statra_{{unique}}" ng-click='onClick($event)' x="`+config.stripe.x+`" y="`+config.stripe.y+`%"
+					width="`+config.exactwidth+`" height="`+config.stripe.height+`" style="stroke:none; outline: none; cursor:pointer;" ${gradient}/>	
+				<g class="statra-{{unique}} split" id="statra_splitters_{{unique}}" ng-if="${!config.combine}" 
+					style="outline: none; border: 0;" transform="translate(0, ${config.stripe.y -2})"></g>	
 				<text ng-repeat="x in [].constructor(${config.tickmarks}) track by $index" id=statra_tickval_{{unique}}_{{$index}} 
-				class="txt-{{unique}} small" text-anchor="middle" dominant-baseline="baseline"
-				 y="95%"></text>
+					class="txt-{{unique}} small" text-anchor="middle" dominant-baseline="baseline" y="95%"></text>
 				
-				 <line ng-repeat="x in [].constructor(${config.tickmarks}) track by $index" id=statra_tick_{{unique}}_{{$index}} visibility="hidden" x1="0" y1="${config.stripe.y+config.stripe.height+3}" x2="0" y2="${config.stripe.y+config.stripe.height+9}" style="stroke:currentColor;stroke-width:1" />
-				
-			</svg>`			
-		
+				<line ng-repeat="x in [].constructor(${config.tickmarks}) track by $index" id=statra_tick_{{unique}}_{{$index}}
+					visibility="hidden" x1="0" y1="${config.stripe.y+config.stripe.height+3}" x2="0" y2="${config.stripe.y+config.stripe.height+9}" 
+					style="stroke:currentColor;stroke-width:1" />				
+			</svg>`		
 		return String.raw`${styles}${layout}`;
 	}
 
@@ -103,11 +100,9 @@ module.exports = function (RED) {
 				ui = RED.require("node-red-dashboard")(RED);
 			}			
 			RED.nodes.createNode(this, config);			
-			
 			var done = null;
 			var range = null;
-			var site = null;	
-		
+			var site = null;		
 			var getSiteProperties = null;
 			var getPosition = null;
 			var getTimeFromPos = null;
@@ -133,8 +128,7 @@ module.exports = function (RED) {
 			var splitters = [];
 			var ctx = node.context()
 	
-			if (checkConfig(node, config)) {
-				
+			if (checkConfig(node, config)) {				
 				checkPayload = function (input){					
 					var ret = null
 					if(Array.isArray(input)){
@@ -211,8 +205,6 @@ module.exports = function (RED) {
 					return false
 				}
 
-				
-
 				findSplitters = function(){
 					function checkSpilt(el,idx,arr){
 						if(idx > 0){
@@ -223,7 +215,7 @@ module.exports = function (RED) {
 								if(el.hasOwnProperty('end')){
 									var diff = arr[idx+1].timestamp - el.end 
 									if(diff < 0){
-										node.warn("overlapping states not supported!")										
+										node.warn("overlapping the states is not supported!")										
 									}									
 									if(diff > 0){
 										// gap
@@ -233,8 +225,7 @@ module.exports = function (RED) {
 										splitters.push({x:xp,width:wp+'%'})
 									}									
 								}
-							}
-							
+							}							
 						} 
 					}
 					storage.forEach(checkSpilt)
@@ -279,8 +270,7 @@ module.exports = function (RED) {
 					}				
 					else{
 						addToStore(val)																				
-					}
-										
+					}										
 					config.min = storage[0].timestamp
 					config.insidemin = config.min
 					if(storage.length > 2){
@@ -309,7 +299,6 @@ module.exports = function (RED) {
 						if(storage[i-1].hasOwnProperty('end')){
 							trail = storage[i-1].end - storage[i-1].timestamp
 						}
-
 						z = storage[i].timestamp - storage[i-1].timestamp - trail				
 						sum[storage[i-1].state] += z 
 						total += z
@@ -338,7 +327,7 @@ module.exports = function (RED) {
 						node.log("Couldn't reach to the site parameters. Using hardcoded default parameters!")
 						opts = {}
 						opts.sizes = { sx: 48, sy: 48, gx: 4, gy: 4, cx: 4, cy: 4, px: 4, py: 4 }
-						opts.theme = {'widget-backgroundColor':{value:"#097479"}}						
+						opts.theme = {'widget-borderColor':{value:"#097479"}}						
 					}									
 					return opts
 				}
@@ -369,8 +358,7 @@ module.exports = function (RED) {
 				
 				generateGradient = function(){
 					var ret = []
-					splitters = []
-					
+					splitters = []					
 					if(storage.length < 2){
 						return ret
 					}
@@ -408,7 +396,7 @@ module.exports = function (RED) {
 					var minutes = d.getMinutes(); 
 					var seconds = d.getSeconds(); 
 					var t 
-					 switch (config.timeformat) {
+					switch (config.timeformat) {
 						case 'HH:mm:ss':
 							t = hours.toString().padStart(2, '0') + ':' +  
 							minutes.toString().padStart(2, '0') + ':' +  
@@ -430,8 +418,7 @@ module.exports = function (RED) {
 							break;	
 						default:
 							break;
-					 }
-										
+					}										
 					return t
 				}
 				
@@ -515,8 +502,7 @@ module.exports = function (RED) {
 					if(storage.length == 0){
 						return null
 					}
-					var time = getTimeFromPos(c,config.stripe.mousemin,config.stripe.mousemax)
-					
+					var time = getTimeFromPos(c,config.stripe.mousemin,config.stripe.mousemax)					
 					var idx = -1 + storage.findIndex(function(state) {
 						return state.timestamp > time;
 					})
@@ -565,8 +551,8 @@ module.exports = function (RED) {
 				config.insidemin = storage.length < 3 ? config.min :  storage[1].timestamp
 								
 				storeInContext(true)
-				config.bgrColor = site.theme['widget-borderColor'].value
 				
+				config.bgrColor = site.theme['widget-borderColor'].value				
 				config.initial = {stops:generateGradient(),ticks:generateTicks(),legend:collectSummary(),splits:splitters}
 
 				var html = HTML(config);		
@@ -582,7 +568,7 @@ module.exports = function (RED) {
 					emitOnlyNewValues: false,
 					forwardInputMessages: false,					
 					storeFrontEndInputAsState: true,
-					
+
 					beforeEmit: function (msg) {											
 						if(msg.control && msg.control.period){
 							config.period = parseInt(msg.control.period)
@@ -608,13 +594,12 @@ module.exports = function (RED) {
 							if (!orig || !orig.msg) {
 								return;
 							}
-							return  generateOutMessage(orig.msg.clickevent);
-						} catch (error) {
+							return generateOutMessage(orig.msg.clickevent);
+						} 
+						catch (error) {
 							node.error(error);
-						}
-						
-					},
-					
+						}						
+					},					
 					initController: function ($scope) {																		
 						$scope.unique = $scope.$eval('$id')
 						$scope.svgns = 'http://www.w3.org/2000/svg';
@@ -808,8 +793,7 @@ module.exports = function (RED) {
 								clearTimeout($scope.timeout)
 								$scope.timeout = null						
 							}
-						}); 
-						
+						});						
 					}
 				});
 			}
