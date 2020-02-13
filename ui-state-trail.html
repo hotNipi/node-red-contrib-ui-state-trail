@@ -60,11 +60,14 @@ SOFTWARE.
 </div>
 
 </br>
-<div class='form-row' id='node-input-features'>
+
+<div class='form-row' id="node-input-legendchoice">
     <label for='node-input-legend'><i class='icon-tag'></i> Legend</label>
-    <input type="checkbox" id="node-input-legend" 
-            style="display:inline-block; width:auto; vertical-align:baseline; 
-            margin-right:5px;margin-left:5px;">Show legend
+    <select id='node-input-legend' style='width:200px !important'>
+        <option value=0>No legend</option>
+        <option value=1>Show all states</option>
+        <option value=2>Show current states</option>
+    </select>
 </div>
 <div class='form-row' id='node-input-persistance'>
     <label for='node-input-persist'><i class='icon-tag'></i> Data Storage</label>
@@ -131,7 +134,7 @@ SOFTWARE.
             timeformat: {value: 'HH:mm:ss'},
             tickmarks:{val:4, required: true},
             persist:{val:false, required: true},
-            legend:{val:false, required: true},
+            legend:{value: 1, validate:RED.validators.number(), required:true},
             combine:{val:true, required: true},
             blanklabel:{value: ''}                    
         },
@@ -169,6 +172,13 @@ SOFTWARE.
                 this.tickmarks = 4;
                 $('#node-input-tickmarks').val('4');
             }
+
+            if (this.legend === undefined) {
+                this.legend = 1;
+                $('#node-input-legend').val('1');
+                $('#node-input-legend').val('Show all states');              
+            } 
+
             if (this.blanklabel === undefined) {
                 this.blanklabel = '';
                 $('#node-input-blanklabel').val('');
@@ -176,10 +186,9 @@ SOFTWARE.
             
             if (this.persist === undefined) {
                 $("#node-input-persist").prop('checked', false);
-            }
-            if (this.legend === undefined) {
-                $("#node-input-legend").prop('checked', false);
-            } 
+            }  
+                  
+            
             if (this.combine === undefined) {
                 $("#node-input-keepall").prop('checked', true);
             }  
@@ -265,11 +274,12 @@ SOFTWARE.
                 this.states = [rbt,rbf];
             }
             for (var i=0; i<this.states.length; i++) {
-                var rule = this.states[i];
-                console.log(rule)
+                var rule = this.states[i];                
                 $("#node-input-rule-container").editableList('addItem',rule);
             }           
-            ruleInfo(configError)         
+            ruleInfo(configError) 
+            
+           
         },
         oneditsave: function (){
             
@@ -331,7 +341,9 @@ SOFTWARE.
     <p>Text to show when there is not yet enough data to display the chart.
     
     <h2>Legend</h2>
-    <p>To show the legend, tick the checkbox and widget height must be configured to 2 units. By clicking the legend on dashboard, you can toggle between names and summary. Summary shows aggregated time or percentage for each state.
+    <p>To show the legend, the widget height must be configured to 2 units. 
+        Legend can be configured for 2 modes. It even shows information for all the configured states or only for states currently in timeline.        
+    <p>    By clicking the legend on dashboard, you can toggle between names and summary. Summary shows aggregated time or percentage for each state.
 
     <h2>Combine similar states</h2>
     <p>By default, the node combines consecutive states if they have same value. You could turn this behavior off, if you wanted to present your data as it was provided. 

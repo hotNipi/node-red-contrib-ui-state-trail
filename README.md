@@ -42,7 +42,10 @@ Optionally you can configure label for each state. If configured, the legend sho
 Text to show when there is not yet enough data to display the chart. 
 
 ### Legend
-To show the legend, tick the checkbox and widget height must be configured to 2 units. By clicking the legend on dashboard, you can toggle between names and summary. Summary shows aggregated time or percentage for each state.
+To show the legend, the widget height must be configured to 2 units. 
+Legend can be configured for 2 modes. It even shows information for all the configured states or only for states currently in timeline.        
+
+By clicking the legend on dashboard, you can toggle between names and summary. Summary shows aggregated time or percentage for each state.
 
 ### Combine similar states
 By default, the node combines consecutive states if they have same value. You could turn this behavior off, if you wanted to present your data as it was provided. 

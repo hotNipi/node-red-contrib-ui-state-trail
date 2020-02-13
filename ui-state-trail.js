@@ -57,14 +57,14 @@ module.exports = function (RED) {
 					</linearGradient>	
 				</defs>
 				<text ng-if="${config.height > 1}">
-					<tspan  ng-if="${config.legend == true}" id="statra_label_{{unique}}" class="txt-{{unique}}" text-anchor="middle" dominant-baseline="hanging" x=`+config.exactwidth/2+` y="2%">
+					<tspan  ng-if="${config.legend > 0}" id="statra_label_{{unique}}" class="txt-{{unique}}" text-anchor="middle" dominant-baseline="hanging" x=`+config.exactwidth/2+` y="2%">
 						`+config.label+`
 					</tspan>
-					<tspan  ng-if="${config.legend == false}" id="statra_label_{{unique}}" class="txt-{{unique}}" text-anchor="middle" dominant-baseline="middle" x=`+config.exactwidth/2+` y="25%">
+					<tspan  ng-if="${config.legend == 0}" id="statra_label_{{unique}}" class="txt-{{unique}}" text-anchor="middle" dominant-baseline="middle" x=`+config.exactwidth/2+` y="25%">
 						`+config.label+`
 					</tspan>
 				</text>	
-				<g class="statra-{{unique}} legend" id="statra_legend_{{unique}}" ng-if="${(config.height > 1 && config.legend == true)}" style="outline: none; border: 0;" ng-click='toggle()'>
+				<g class="statra-{{unique}} legend" id="statra_legend_{{unique}}" ng-if="${(config.height > 1 && config.legend > 0)}" style="outline: none; border: 0;" ng-click='toggle()'>
 
 				</g>	
 				<text ng-if="${config.blanklabel != ""}" font-style="italic">
@@ -306,7 +306,11 @@ module.exports = function (RED) {
 					}
 					var ret = []
 					for(i = 0;i<config.states.length;i++){
-						p = (100*sum[config.states[i].state]/total).toFixed(2) + "%"
+						p = (100*sum[config.states[i].state]/total)
+						if(config.legend == 2 && p <= 0){
+							continue
+						}
+						p = p.toFixed(2) + "%"
 						var n = config.states[i].label == "" ? config.states[i].state.toString() : config.states[i].label
 						ret.push({name:n,col:config.states[i].col,val:formatTime(sum[config.states[i].state],true),per:p})
 					}
@@ -540,7 +544,8 @@ module.exports = function (RED) {
 				config.stripe.mousemax = config.stripe.right*config.exactwidth/100
 
 				config.period = parseInt(config.periodLimit) * parseInt(config.periodLimitUnit) * 1000
-				config.tickmarks = config.tickmarks || 4				
+				config.tickmarks = config.tickmarks || 4
+				config.legend = parseInt(config.legend)				
 				
 				prepareStorage()
 				
