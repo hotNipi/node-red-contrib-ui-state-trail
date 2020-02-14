@@ -52,7 +52,7 @@ SOFTWARE.
     <label for="node-input-timeformat">Time Format</label>
     <input type="text" id="node-input-timeformat" style="width:100px;">
     <label for='node-input-tickmarks' style='width:33px'>Ticks</label>
-    <input type='number' id='node-input-tickmarks' min='2' max='12' value='4' size='1' style='width:47px' >
+    <input type='number' id='node-input-tickmarks' min='2' max='25' value='4' size='1' style='width:47px' >
 </div>
 
 <div class="form-row node-input-rule-container-row">
@@ -198,18 +198,20 @@ SOFTWARE.
             var odef = 'HH:mm:ss';
             if (oval === "HH:mm:ss") { odef = oval; }
             if (oval === "HH:mm") { odef = oval; }
+            if (oval === "HH") { odef = oval; }
             if (oval === "mm:ss") { odef = oval; }
             if (oval === "mm") { odef = oval; }
             if (oval === "ss") { odef = oval; }            
             var ohms = {value:"HH:mm:ss", label:"HH:mm:ss", hasValue:false};
             var ohm = {value:"HH:mm", label:"HH:mm", hasValue:false};
+            var oh = {value:"HH", label:"HH", hasValue:false};
             var oms = {value:"mm:ss", label:"mm:ss", hasValue:false};
             var om = {value:"mm", label:"mm", hasValue:false};
             var os = {value:"ss", label:"ss", hasValue:false};
            
             $("#node-input-timeformat").typedInput({
                 default: odef,
-                types:[ ohms, ohm, oms, om, os]
+                types:[ ohms, ohm,oh, oms, om, os]
             });
 
 

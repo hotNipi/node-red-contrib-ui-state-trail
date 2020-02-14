@@ -72,7 +72,7 @@ module.exports = function (RED) {
 				<rect id="statra_{{unique}}" ng-click='onClick($event)' x="`+config.stripe.x+`" y="`+config.stripe.y+`%"
 					width="`+config.exactwidth+`" height="`+config.stripe.height+`" style="stroke:none; outline: none; cursor:pointer;" ${gradient}/>	
 				<g class="statra-{{unique}} split" id="statra_splitters_{{unique}}" ng-if="${!config.combine}" 
-					style="outline: none; border: 0;" transform="translate(0, ${config.stripe.y -2})"></g>	
+					style="outline: none; border: 0;" transform="translate(0, ${config.stripe.y-1})"></g>	
 				<text ng-repeat="x in [].constructor(${config.tickmarks}) track by $index" id=statra_tickval_{{unique}}_{{$index}} 
 					class="txt-{{unique}} small" text-anchor="middle" dominant-baseline="baseline" y="95%"></text>
 				
@@ -409,6 +409,9 @@ module.exports = function (RED) {
 							t = hours.toString().padStart(2, '0') + ':' +  
 							minutes.toString().padStart(2, '0');
 							break;
+						case 'HH':
+							t = hours.toString().padStart(2, '0')							
+							break;
 						case 'mm:ss':
 							t = minutes.toString().padStart(2, '0') + ':' +  
 							seconds.toString().padStart(2, '0');
@@ -677,9 +680,9 @@ module.exports = function (RED) {
 								split = document.createElementNS($scope.svgns, 'rect');
 								split.setAttribute('id','statra_split_'+$scope.unique+"_"+i)
 								split.setAttribute('x',splits[i].x+'%');
-								split.setAttribute('y','0%');
+								split.setAttribute('y','-1%');
 								split.setAttribute('width',splits[i].width);
-								split.setAttribute('height',$scope.sizes.height);
+								split.setAttribute('height',$scope.sizes.height+1);
 								document.getElementById("statra_splitters_"+$scope.unique).appendChild(split);
 							}							
 						}
