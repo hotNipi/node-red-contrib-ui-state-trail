@@ -124,7 +124,7 @@ Dm –	minimum safe duration
 
 Formula to calculate widget size in pixels
 
-WW = (WS * STS + WSP * (STS – 1))  -  12
+WW = (WS * STS) + (WSP * (STS – 1))  -  12
 
 To find out minimum safe duration 
 
