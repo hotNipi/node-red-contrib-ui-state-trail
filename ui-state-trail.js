@@ -306,9 +306,12 @@ module.exports = function (RED) {
 					var ret = []
 					for(i = 0;i<config.states.length;i++){
 						p = (100*sum[config.states[i].state]/total)
+						if(isNaN(p)){
+							p = 0
+						}
 						if(config.legend == 2 && p <= 0){
 							continue
-						}
+						}												
 						p = p.toFixed(2) + "%"
 						var n = config.states[i].label == "" ? config.states[i].state.toString() : config.states[i].label
 						ret.push({name:n,col:config.states[i].col,val:formatTime(sum[config.states[i].state],true),per:p})
