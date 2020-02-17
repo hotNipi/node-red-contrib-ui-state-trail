@@ -72,7 +72,9 @@ module.exports = function (RED) {
 				<rect id="statra_{{unique}}" ng-click='onClick($event)' x="`+config.stripe.x+`" y="`+config.stripe.y+`%"
 					width="`+config.exactwidth+`" height="`+config.stripe.height+`" style="stroke:none; outline: none; cursor:pointer;" ${gradient}/>	
 				<g class="statra-{{unique}} split" id="statra_splitters_{{unique}}" ng-if="${!config.combine}" 
-					style="outline: none; border: 0;" transform="translate(0, ${config.stripe.y-1})"></g>	
+					style="outline: none; border: 0;" transform="translate(0, ${config.stripe.y-1})"></g>
+				<g class="statra-{{unique}} split" id="statra_dots_{{unique}}" 
+					style="outline: none; border: 0;" transform="translate(0, ${config.stripe.y-6})"></g>		
 				<text ng-repeat="x in [].constructor(${config.tickmarks}) track by $index" id=statra_tickval_{{unique}}_{{$index}} 
 					class="txt-{{unique}} small" text-anchor="middle" dominant-baseline="baseline" y="95%"></text>
 				
@@ -124,8 +126,10 @@ module.exports = function (RED) {
 			var generateOutMessage = null;
 			var addToStore = null;
 			var findSplitters = null;
+			var findDots = null;
 			var isValidStateConf = null;
 			var splitters = [];
+			var dots = [];
 			var ctx = node.context()
 	
 			if (checkConfig(node, config)) {				
@@ -230,6 +234,20 @@ module.exports = function (RED) {
 					}
 					storage.forEach(checkSpilt)
 				}
+
+				findDots = function(){
+					dots = []
+					var safe = config.period / config.exactwidth / 2
+					function checkDot(el,idx,arr){
+						if(idx > 0){
+							if(el.timestamp - arr[idx-1].timestamp < safe){
+								dots.push({x:getPosition(arr[idx-1].timestamp,config.insidemin,config.max),col:getColor( arr[idx-1].state)})								
+							}
+						}
+					}
+					storage.forEach(checkDot)
+				}
+
 
 				addToStore = function(s){					
 					if(storage.length > 0){
@@ -391,6 +409,7 @@ module.exports = function (RED) {
 					if(!config.combine){
 						findSplitters()	
 					}
+					findDots()
 					return ret
 				}
 				formatTime = function(stamp,utc){
@@ -559,7 +578,7 @@ module.exports = function (RED) {
 				storeInContext(true)
 				
 				config.bgrColor = site.theme['widget-borderColor'].value				
-				config.initial = {stops:generateGradient(),ticks:generateTicks(),legend:collectSummary(),splits:splitters}
+				config.initial = {stops:generateGradient(),ticks:generateTicks(),legend:collectSummary(),splits:splitters,dots:dots}
 
 				var html = HTML(config);		
 
@@ -592,7 +611,7 @@ module.exports = function (RED) {
 							return {}
 						}
 						store(validated)
-						msg.payload = {stops:generateGradient(),ticks:generateTicks(),legend:collectSummary(),splits:splitters}
+						msg.payload = {stops:generateGradient(),ticks:generateTicks(),legend:collectSummary(),splits:splitters,dots:dots}
 						return { msg };
 					},
 					beforeSend: function (msg, orig) {
@@ -660,6 +679,7 @@ module.exports = function (RED) {
 							updateTicks(data.ticks)
 							updateLegend(data.legend)
 							updateSplitters(data.splits)
+							updateDots(data.dots)
 						}
 
 						var updateSplitters = function (splits){
@@ -687,6 +707,31 @@ module.exports = function (RED) {
 							}							
 						}
 
+						var updateDots = function (dots){
+							if(!dots){
+								return
+							}
+							var g =  document.getElementById("statra_dots_"+$scope.unique);
+							if(!g){
+								return
+							}
+							if(g.children.length > 0){
+								while (g.firstChild) {
+									g.removeChild(g.firstChild);
+								}
+							}
+							var dot							
+							for(var i=0;i<dots.length;i++){
+								dot = document.createElementNS($scope.svgns, 'circle');
+								dot.setAttribute('id','statra_dot_'+$scope.unique+"_"+i)
+								dot.setAttribute('cx',dots[i].x+'%');
+								dot.setAttribute('cy','0');
+								dot.setAttribute('r','3');
+								dot.setAttributeNS(null, 'fill', dots[i].col);
+								document.getElementById("statra_dots_"+$scope.unique).appendChild(dot);
+							}							
+						}
+
 						var updateLegend = function (legend){
 							if(!legend){
 								return
@@ -709,7 +754,7 @@ module.exports = function (RED) {
 									
 									rect = document.createElementNS($scope.svgns, 'rect');
 									rect.setAttributeNS(null, 'x', xp);
-									rect.setAttributeNS(null, 'y', '30%');
+									rect.setAttributeNS(null, 'y', '28%');
 									rect.setAttributeNS(null, 'height', '11');
 									rect.setAttributeNS(null, 'width', '8');
 									rect.setAttributeNS(null, 'fill', legend[i].col);
@@ -719,7 +764,7 @@ module.exports = function (RED) {
 
 									txt = document.createElementNS($scope.svgns, 'text');
 									txt.setAttributeNS(null, 'x', xp);
-									txt.setAttributeNS(null, 'y', '30%');
+									txt.setAttributeNS(null, 'y', '28%');
 									txt.setAttributeNS(null, 'dominant-baseline', 'hanging');
 									txt.setAttributeNS(null, 'fill', legend[i].col)
 									txt.setAttribute('class','txt-'+$scope.unique+' small')

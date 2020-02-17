@@ -107,8 +107,11 @@ By clicking the chart bar, the widget sends message. Output msg contains clicked
 
 Widget scales the time to fit the data which satisfies configured period into graphics. This means that time slices change their width while the widget has been running less than configured period.
 Such scaling may lead to the circumstances where state with short duration can not be rendered anymore. This is technical limitation which cannot be avoided.
+To identify that such short state is currrently in the timeline, the widget draws small dot with the state color above the bar. It may happen, that dot and small line of state are both drawn.
 
-Even there is nothing to do about it, it is possible to calculate the shortest state duration guaranteed to be drawn by widget. If state duration expected to be less than the safe time, consider configuring shorter period or to make widget wider.
+![state-trail-dots.JPG](images/state-trail-dots.JPG)
+
+It is possible to calculate the shortest state duration guaranteed to be drawn by widget. If you are expecting states with duration less than the safe time, consider configuring shorter period or to make widget wider.
 
 Safe minimum duration is not the absolute limit, the widget can render smaller units, but without any guarantee.
 
@@ -128,13 +131,13 @@ WW = (WS * STS) + (WSP * (STS – 1))  -  12
 
 To find out minimum safe duration 
 
-Dm = P / WW
+Dm = P / WW / 2
 ```
 
 Example with standard dashboard configuration, widget width 6 units and configured period 1h (3600 sec)
 ```
 WW = (48 * 6) + (6 * (6 - 1)) – 12 = 306
-Dm = 3600 / 306 = 11,76 sec
+Dm = 3600 / 306 / 2 = 5,88 sec
 ```
 
 
