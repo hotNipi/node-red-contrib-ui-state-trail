@@ -9,7 +9,7 @@
 
 
 ## Description
-![node-red-contrib-ui-state-trail.JPG](images/node-red-contrib-ui-state-trail.JPG)
+![Node-RED dashboard widget node-red-contrib-ui-state-trail](images/node-red-contrib-ui-state-trail.JPG)
 
 Node-RED dashboard widget. Gantt type chart to visualize state changes over time period.
 
@@ -99,7 +99,7 @@ msg.payload = []
 
 By clicking the chart bar, the widget sends message. Output msg contains clicked state in <code>msg.payload</code> and coordinates of click in <code>msg.clickCoordinates</code> 
 
-![click-output.JPG](images/click-output.JPG)
+![Node-RED dashboard widget state-trail click-output](images/click-output.JPG)
  
 
 
@@ -109,7 +109,7 @@ Widget scales the time to fit the data which satisfies configured period into gr
 Such scaling may lead to the circumstances where state with short duration can not be rendered anymore. This is technical limitation which cannot be avoided.
 To identify that such short state is currrently in the timeline, the widget draws small dot with the state color above the bar. It may happen, that dot and small line of state are both drawn.
 
-![state-trail-dots.JPG](images/state-trail-dots.JPG)
+![Node-RED dashboard widget state-trail-dots](images/state-trail-dots.JPG)
 
 It is possible to calculate the shortest state duration guaranteed to be drawn by widget. If you are expecting states with duration less than the safe time, consider configuring shorter period or to make widget wider.
 
