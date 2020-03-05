@@ -58,7 +58,6 @@ SOFTWARE.
 <div class="form-row node-input-rule-container-row">
     <ol id="node-input-rule-container"></ol>    
 </div>
-
 </br>
 
 <div class='form-row' id="node-input-legendchoice">
@@ -93,75 +92,131 @@ SOFTWARE.
 <script type='text/javascript'>
     var ERR_COUNT = "Configure at least 2 states!"
     var ERR_UNIQUE = "All states must be unique!"
-    
-    RED.nodes.registerType('ui_statetrail',{
+
+    RED.nodes.registerType('ui_statetrail', {
         category: 'dashboard',
         color: 'rgb( 63, 173, 181)',
-        configError:'',
+        configError: '',
         defaults: {
-            group: {type: 'ui_group', required:true},
-            order: {value: 0},
+            group: {
+                type: 'ui_group',
+                required: true
+            },
+            order: {
+                value: 0
+            },
             width: {
                 value: 0,
-                validate: function(v) {
+                validate: function (v) {
                     var valid = true
-                    var width = v||0;
-                    var currentGroup = $('#node-input-group').val()|| this.group;
+                    var width = v || 0;
+                    var currentGroup = $('#node-input-group').val() || this.group;
                     var groupNode = RED.nodes.node(currentGroup);
                     valid = !groupNode || +width <= +groupNode.width;
-                    $('#node-input-size').toggleClass('input-error',!valid);
+                    $('#node-input-size').toggleClass('input-error', !valid);
                     return valid;
-                }},
-            height: {value: 0},
-            name: {value: ''},
-            label:{value: ''},
-            states:{value:[{state:true,col:"#009933",t:"bool",label:''},{state:false,col:"#999999",t:"bool",label:''}],
-                    validate: function(v) {
-                        configError = ""
-                        var unique = [...new Set(v.map(s => s.state))]
-                        var valid = true 
-                        if(v.length < 2){
-                            configError = ERR_COUNT
-                            valid = false
-                        }else if (v.length != unique.length){
-                            configError = ERR_UNIQUE
-                            valid = false
-                        }                 
-                        return valid
-                    }},
-            periodLimit: {value: 1, validate:RED.validators.number(), required:true},
-            periodLimitUnit: {value: '3600', required:true},
-            timeformat: {value: 'HH:mm:ss'},
-            tickmarks:{val:4, required: true},
-            persist:{val:false, required: true},
-            legend:{value: 1, validate:RED.validators.number(), required:true},
-            combine:{val:true, required: true},
-            blanklabel:{value: ''}                    
+                }
+            },
+            height: {
+                value: 0
+            },
+            name: {
+                value: ''
+            },
+            label: {
+                value: ''
+            },
+            states: {
+                value: [{
+                    state: true,
+                    col: "#009933",
+                    t: "bool",
+                    label: ''
+                }, {
+                    state: false,
+                    col: "#999999",
+                    t: "bool",
+                    label: ''
+                }],
+                validate: function (v) {
+                    configError = ""
+                    var unique = [...new Set(v.map(s => s.state))]
+                    var valid = true
+                    if (v.length < 2) {
+                        configError = ERR_COUNT
+                        valid = false
+                    } else if (v.length != unique.length) {
+                        configError = ERR_UNIQUE
+                        valid = false
+                    }
+                    return valid
+                }
+            },
+            periodLimit: {
+                value: 1,
+                validate: RED.validators.number(),
+                required: true
+            },
+            periodLimitUnit: {
+                value: '3600',
+                required: true
+            },
+            timeformat: {
+                value: 'HH:mm:ss'
+            },
+            tickmarks: {
+                val: 4,
+                required: true
+            },
+            persist: {
+                val: false,
+                required: true
+            },
+            legend: {
+                value: 1,
+                validate: RED.validators.number(),
+                required: true
+            },
+            combine: {
+                val: true,
+                required: true
+            },
+            blanklabel: {
+                value: ''
+            }
         },
-        inputs:1,
-        outputs:1,
+        inputs: 1,
+        outputs: 1,
         icon: 'statetrail.png',
         paletteLabel: 'state-trail',
-        label: function() {
-            return this.name||'State-trail';
+        label: function () {
+            return this.name || 'State-trail';
         },
-        oneditprepare: function() {            
+        oneditprepare: function () {
             function getColor(idx) {
-                var colors = ['#009933','#999999','#ff6666','#009999','#cccc00','#ff33cc','#cc6600','#99ff66','#660033']
-                if(idx > colors.length-1){
-                    return colors[Math.floor(Math.random()*colors.length)]
+                var colors = ['#009933', '#999999', '#ff6666', '#009999', '#cccc00', '#ff33cc', '#cc6600',
+                    '#99ff66', '#660033'
+                ]
+                if (idx > colors.length - 1) {
+                    return colors[Math.floor(Math.random() * colors.length)]
                 }
                 return colors[idx]
             }
-            function defaultRule(idx){
-                return {state:true,col:getColor(idx),t:"bool",label:''}
+
+            function defaultRule(idx) {
+                return {
+                    state: true,
+                    col: getColor(idx),
+                    t: "bool",
+                    label: ''
+                }
             }
-            
-            function ruleInfo(error){                 
+
+            function ruleInfo(error) {
                 $('#error-ruleinfo').text(error);
-                $('.red-ui-editableList-border').toggleClass('input-error',(error != ""));                
+                $('.red-ui-editableList-border').toggleClass('input-error', (error != ""));
             }
-            
+
             $('#node-input-size').elementSizer({
                 width: '#node-input-width',
                 height: '#node-input-height',
@@ -176,144 +231,217 @@ SOFTWARE.
             if (this.legend === undefined) {
                 this.legend = 1;
                 $('#node-input-legend').val('1');
-                $('#node-input-legend').val('Show all states');              
-            } 
+                $('#node-input-legend').val('Show all states');
+            }
 
             if (this.blanklabel === undefined) {
                 this.blanklabel = '';
                 $('#node-input-blanklabel').val('');
             }
-            
+
             if (this.persist === undefined) {
                 $("#node-input-persist").prop('checked', false);
-            }  
-                  
-            
+            }
+
+
             if (this.combine === undefined) {
                 $("#node-input-keepall").prop('checked', true);
-            }  
-           
+            }
+
             var oval = $("#node-input-timeformat").val();
-            if (!oval) { $("#node-input-timeformat").val("HH:mm:ss"); }
+            if (!oval) {
+                $("#node-input-timeformat").val("HH:mm:ss");
+            }
             var odef = 'HH:mm:ss';
-            if (oval === "HH:mm:ss") { odef = oval; }
-            if (oval === "HH:mm") { odef = oval; }
-            if (oval === "HH") { odef = oval; }
-            if (oval === "mm:ss") { odef = oval; }
-            if (oval === "mm") { odef = oval; }
-            if (oval === "ss") { odef = oval; }            
-            var ohms = {value:"HH:mm:ss", label:"HH:mm:ss", hasValue:false};
-            var ohm = {value:"HH:mm", label:"HH:mm", hasValue:false};
-            var oh = {value:"HH", label:"HH", hasValue:false};
-            var oms = {value:"mm:ss", label:"mm:ss", hasValue:false};
-            var om = {value:"mm", label:"mm", hasValue:false};
-            var os = {value:"ss", label:"ss", hasValue:false};
-           
+            if (oval === "HH:mm:ss") {
+                odef = oval;
+            }
+            if (oval === "HH:mm") {
+                odef = oval;
+            }
+            if (oval === "HH") {
+                odef = oval;
+            }
+            if (oval === "mm:ss") {
+                odef = oval;
+            }
+            if (oval === "mm") {
+                odef = oval;
+            }
+            if (oval === "ss") {
+                odef = oval;
+            }
+            var ohms = {
+                value: "HH:mm:ss",
+                label: "HH:mm:ss",
+                hasValue: false
+            };
+            var ohm = {
+                value: "HH:mm",
+                label: "HH:mm",
+                hasValue: false
+            };
+            var oh = {
+                value: "HH",
+                label: "HH",
+                hasValue: false
+            };
+            var oms = {
+                value: "mm:ss",
+                label: "mm:ss",
+                hasValue: false
+            };
+            var om = {
+                value: "mm",
+                label: "mm",
+                hasValue: false
+            };
+            var os = {
+                value: "ss",
+                label: "ss",
+                hasValue: false
+            };
+
             $("#node-input-timeformat").typedInput({
                 default: odef,
-                types:[ ohms, ohm,oh, oms, om, os]
+                types: [ohms, ohm, oh, oms, om, os]
             });
 
 
             $("#node-input-rule-container").editableList({
-                removable:true,
-                header: $("<div>").css({padding:"6px"}).append($.parseHTML(`
+                removable: true,
+                header: $("<div>").css({
+                    padding: "6px"
+                }).append($.parseHTML(`
                     <div style='width:120px; text-align:center; display: inline-grid'><b>State</b></div> 
                     <div style='width:80px; text-align:center; display: inline-grid'><b>Color</b></div>
                     <div style='width:160px; text-align:center; display: inline-grid'><b>Label</b></div>
                     <div id='error-ruleinfo' style='width:220px; color:red; text-align:center; font-weight:bold; display:inline-grid'></div>  
                     `)),
-                addItem: function(container, index, rule) {                    
+                addItem: function (container, index, rule) {
                     if (!rule.hasOwnProperty('state')) {
                         rule = defaultRule(index)
-                    }               
+                    }
                     container.css({
                         overflow: 'hidden',
                         whiteSpace: 'nowrap'
                     });
                     var row = $('<div/>').appendTo(container);
-                   
+
                     var propField
                     var colorField
                     var labelField
 
-                    propField = $('<input/>',{class:"node-input-rule-state-value",style:"width:120px;",type:"text" })
+                    propField = $('<input/>', {
+                            class: "node-input-rule-state-value",
+                            style: "width:120px;",
+                            type: "text"
+                        })
                         .appendTo(row)
-                        .typedInput({types:['bool','str','num']});                       
+                        .typedInput({
+                            types: ['bool', 'str', 'num']
+                        });
 
-                    colorField = $('<input/>',{value:rule.col, class:"node-input-rule-state-color",style:"width:80px; margin-left:8px;",type:"color"})                    
+                    colorField = $('<input/>', {
+                            value: rule.col,
+                            class: "node-input-rule-state-color",
+                            style: "width:80px; margin-left:8px;",
+                            type: "color"
+                        })
                         .appendTo(row)
-                    
-                    labelField = $('<input/>',{class:"node-input-rule-state-label",style:"width:160px; margin-left:8px;",type:"text",placeholder:'optional'})                    
+
+                    labelField = $('<input/>', {
+                            class: "node-input-rule-state-label",
+                            style: "width:160px; margin-left:8px;",
+                            type: "text",
+                            placeholder: 'optional'
+                        })
                         .appendTo(row)
-                        .typedInput({types:['str']});   
-                   
-                    propField.typedInput('value',rule.state);
-                    labelField.typedInput('value',rule.label)
-                    propField.typedInput('type',rule.t);
-                    propField.typedInput().on('change', function(type, value) {
-                       if(configError == ERR_UNIQUE){
-                            configError = "" 
+                        .typedInput({
+                            types: ['str']
+                        });
+
+                    propField.typedInput('value', rule.state);
+                    labelField.typedInput('value', rule.label)
+                    propField.typedInput('type', rule.t);
+                    propField.typedInput().on('change', function (type, value) {
+                        if (configError == ERR_UNIQUE) {
+                            configError = ""
                             ruleInfo(configError)
-                       }                       
+                        }
                     });
-                    if(index > 0 && configError == ERR_COUNT){
-                        configError = "" 
-                        ruleInfo(configError)   
-                    }                   
-                            
+                    if (index > 0 && configError == ERR_COUNT) {
+                        configError = ""
+                        ruleInfo(configError)
+                    }
+
                 },
-                removeItem: function(data) {                   
-                    configError = "" 
-                     ruleInfo(configError)
+                removeItem: function (data) {
+                    configError = ""
+                    ruleInfo(configError)
                 }
             });
 
             if (!this.states) {
-                var rbt = {state:true,col:"#009933",t:'bool',label:''};
-                var rbf = {state:false,col:"#999999",t:'bool',label:''};
+                var rbt = {
+                    state: true,
+                    col: "#009933",
+                    t: 'bool',
+                    label: ''
+                };
+                var rbf = {
+                    state: false,
+                    col: "#999999",
+                    t: 'bool',
+                    label: ''
+                };
 
-                this.states = [rbt,rbf];
+                this.states = [rbt, rbf];
             }
-            for (var i=0; i<this.states.length; i++) {
-                var rule = this.states[i];                
-                $("#node-input-rule-container").editableList('addItem',rule);
-            }           
-            ruleInfo(configError) 
-            
-           
+            for (var i = 0; i < this.states.length; i++) {
+                var rule = this.states[i];
+                $("#node-input-rule-container").editableList('addItem', rule);
+            }
+            ruleInfo(configError)
+
+
         },
-        oneditsave: function (){
-            
+        oneditsave: function () {
+
             $("#node-input-timeformat").val($("#node-input-timeformat").typedInput('type'));
             var states = $("#node-input-rule-container").editableList('items');
             var node = this;
-           
-            node.states= [];
-           var convert = function(rule){
-               if(rule.t === 'str'){
-                   return rule
-               }
-               if(rule.t === 'bool'){
-                   rule.state = rule.state == "true" ? true : false
-               }
-               if(rule.t == 'num'){
-                   rule.state = parseFloat(rule.state)
-               }
-               return rule
-           }
-            
-            states.each(function(i) {
+
+            node.states = [];
+            var convert = function (rule) {
+                if (rule.t === 'str') {
+                    return rule
+                }
+                if (rule.t === 'bool') {
+                    rule.state = rule.state == "true" ? true : false
+                }
+                if (rule.t == 'num') {
+                    rule.state = parseFloat(rule.state)
+                }
+                return rule
+            }
+
+            states.each(function (i) {
                 var rule = $(this);
-                var st = rule.find(".node-input-rule-state-value").typedInput('value')                
+                var st = rule.find(".node-input-rule-state-value").typedInput('value')
                 var tp = rule.find(".node-input-rule-state-value").typedInput('type')
                 var co = rule.find(".node-input-rule-state-color").val();
                 var lb = rule.find(".node-input-rule-state-label").typedInput('value')
-                var r = convert({state:st,col:co,t:tp,label:lb})
+                var r = convert({
+                    state: st,
+                    col: co,
+                    t: tp,
+                    label: lb
+                })
                 node.states.push(r);
-               
+
             });
-           // console.log(node.states)
+            // console.log(node.states)
         }
     });
 </script>
