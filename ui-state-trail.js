@@ -257,7 +257,7 @@ module.exports = function (RED) {
 						temp = temp.sort((a, b) => a.timestamp - b.timestamp)					
 						if(config.combine){
 							var idx = temp.length - 1
-							if(idx > 1){
+							if(idx > 2){
 								if(temp[idx-2].state === temp[idx-1].state){
 									temp.splice(idx-1,1)
 								}
@@ -294,7 +294,8 @@ module.exports = function (RED) {
 					if(storage.length > 2){
 						config.insidemin = storage[1].timestamp
 					}					
-					config.max = storage[storage.length - 1].timestamp					
+					config.max = storage[storage.length - 1].timestamp	
+
 					showInfo()	
 					storeInContext()					
 				}
