@@ -43,7 +43,7 @@ Text to show when there is not yet enough data to display the chart.
 
 ### Legend
 To show the legend, the widget height must be configured to 2 units. 
-Legend can be configured for 2 modes. It even shows information for all the configured states or only for states currently in timeline.        
+Legend can be configured for 3 modes. It even shows information for all the configured states or for states currently in timeline or only for latest state       
 
 By clicking the legend on dashboard, you can toggle between names and summary. Summary shows aggregated time or percentage for each state.
 

@@ -248,8 +248,11 @@ module.exports = function (RED) {
 
 				findDots = function () {
 					dots = []
-					var safe = config.period / config.exactwidth / 2
-
+					if(storage.length < 2){
+						return
+					}
+					var total = storage[storage.length-1].timestamp - storage[0].timestamp
+					var safe = total / config.exactwidth / 2
 					function checkDot(el, idx, arr) {
 						if (idx > 0) {
 							if (el.timestamp - arr[idx - 1].timestamp < safe) {
@@ -342,6 +345,14 @@ module.exports = function (RED) {
 						}
 						if (config.legend == 2 && p <= 0) {
 							continue
+						}
+						if (config.legend == 3){
+							if(len < 1){
+								continue
+							}
+							if(config.states[i].state != storage[storage.length-1].state){
+								continue
+							}						
 						}
 						p = p.toFixed(2) + "%"
 						var n = config.states[i].label == "" ? config.states[i].state.toString() : config.states[i].label
