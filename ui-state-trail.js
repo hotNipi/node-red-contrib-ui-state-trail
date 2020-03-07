@@ -56,7 +56,7 @@ module.exports = function (RED) {
 					</linearGradient>	
 				</defs>
 				<text ng-if="${config.height > 1}">
-					<tspan  ng-if="${config.legend > 0}" id="statra_label_{{unique}}" class="txt-{{unique}}" text-anchor="middle" dominant-baseline="hanging" x=` + config.exactwidth / 2 + ` y="2%">
+					<tspan  ng-if="${config.legend > 0}" id="statra_label_{{unique}}" class="txt-{{unique}}" text-anchor="middle" dominant-baseline="hanging" x=` + config.exactwidth / 2 + ` y="4%">
 						` + config.label + `
 					</tspan>
 					<tspan  ng-if="${config.legend == 0}" id="statra_label_{{unique}}" class="txt-{{unique}}" text-anchor="middle" dominant-baseline="middle" x=` + config.exactwidth / 2 + ` y="25%">
@@ -72,14 +72,14 @@ module.exports = function (RED) {
 				<rect id="statra_{{unique}}" ng-click='onClick($event)' x="` + config.stripe.x + `" y="` + config.stripe.y + `%"
 					width="` + config.exactwidth + `" height="` + config.stripe.height + `" style="stroke:none; outline: none; cursor:pointer;" ${gradient}/>	
 				<g class="statra-{{unique}} split" id="statra_splitters_{{unique}}" ng-if="${!config.combine}" 
-					style="outline: none; border: 0;" transform="translate(0, ${config.stripe.y-1})"></g>
+					style="outline: none; border: 0;" ></g>
 				<g class="statra-{{unique}} split" id="statra_dots_{{unique}}" 
-					style="outline: none; border: 0;" transform="translate(0, ${config.stripe.y-6})"></g>		
+					style="outline: none; border: 0;"></g>		
 				<text ng-repeat="x in [].constructor(${config.tickmarks}) track by $index" id=statra_tickval_{{unique}}_{{$index}} 
 					class="txt-{{unique}} small" text-anchor="middle" dominant-baseline="baseline" y="95%"></text>
 				
 				<line ng-repeat="x in [].constructor(${config.tickmarks}) track by $index" id=statra_tick_{{unique}}_{{$index}}
-					visibility="hidden" x1="0" y1="${config.stripe.y+config.stripe.height+3}" x2="0" y2="${config.stripe.y+config.stripe.height+9}" 
+					visibility="hidden" x1="0" y1="${config.stripe.tyt}%" x2="0" y2="${config.stripe.tyb}%" 
 					style="stroke:currentColor;stroke-width:1" />				
 			</svg>`
 		return String.raw `${styles}${layout}`;
@@ -248,11 +248,12 @@ module.exports = function (RED) {
 
 				findDots = function () {
 					dots = []
-					if(storage.length < 2){
+					if (storage.length < 2) {
 						return
 					}
-					var total = storage[storage.length-1].timestamp - storage[0].timestamp
+					var total = storage[storage.length - 1].timestamp - storage[0].timestamp
 					var safe = total / config.exactwidth / 2
+
 					function checkDot(el, idx, arr) {
 						if (idx > 0) {
 							if (el.timestamp - arr[idx - 1].timestamp < safe) {
@@ -346,13 +347,13 @@ module.exports = function (RED) {
 						if (config.legend == 2 && p <= 0) {
 							continue
 						}
-						if (config.legend == 3){
-							if(len < 1){
+						if (config.legend == 3) {
+							if (len < 1) {
 								continue
 							}
-							if(config.states[i].state != storage[storage.length-1].state){
+							if (config.states[i].state != storage[storage.length - 1].state) {
 								continue
-							}						
+							}
 						}
 						p = p.toFixed(2) + "%"
 						var n = config.states[i].label == "" ? config.states[i].state.toString() : config.states[i].label
@@ -668,15 +669,24 @@ module.exports = function (RED) {
 				config.exactwidth = parseInt(site.sizes.sx * config.width + site.sizes.cx * (config.width - 1)) - 12;
 				config.exactheight = parseInt(site.sizes.sy * config.height + site.sizes.cy * (config.height - 1)) - 12;
 
-				var sh = (site.sizes.sy / 2) - site.sizes.cy
+				var sh = (site.sizes.sy / 2) - 6
 				var sy = config.height == 1 ? 0 : 50
+				var shp = 100 * sh / config.exactheight
+				var tyt = sy + shp + (100 / config.exactheight)
+				var dot = sy - (100 * 6 / config.exactheight)
+				var tyb = tyt + (100 * 5 / config.exactheight)
 				var edge = Math.max(config.timeformat.length, 6) * 4 * 100 / config.exactwidth
 				config.stripe = {
 					height: sh,
 					x: 0,
 					y: sy,
 					left: edge,
-					right: (100 - edge)
+					right: (100 - edge),
+					tyt: tyt,
+					tyb: tyb,
+					dot: dot
+
+
 				}
 				config.stripe.mousemin = config.stripe.left * config.exactwidth / 100
 				config.stripe.mousemax = config.stripe.right * config.exactwidth / 100
@@ -832,7 +842,7 @@ module.exports = function (RED) {
 								split = document.createElementNS($scope.svgns, 'rect');
 								split.setAttribute('id', 'statra_split_' + $scope.unique + "_" + i)
 								split.setAttribute('x', splits[i].x + '%');
-								split.setAttribute('y', '-1%');
+								split.setAttribute('y', $scope.sizes.y + '%');
 								split.setAttribute('width', splits[i].width);
 								split.setAttribute('height', $scope.sizes.height + 1);
 								document.getElementById("statra_splitters_" + $scope.unique).appendChild(split);
@@ -857,7 +867,7 @@ module.exports = function (RED) {
 								dot = document.createElementNS($scope.svgns, 'circle');
 								dot.setAttribute('id', 'statra_dot_' + $scope.unique + "_" + i)
 								dot.setAttribute('cx', dots[i].x + '%');
-								dot.setAttribute('cy', '0');
+								dot.setAttribute('cy', $scope.sizes.dot + '%');
 								dot.setAttribute('r', '3');
 								dot.setAttributeNS(null, 'fill', dots[i].col);
 								document.getElementById("statra_dots_" + $scope.unique).appendChild(dot);
