@@ -288,6 +288,12 @@ module.exports = function (RED) {
 					} else {
 						storage.push(s)
 					}
+					config.min = storage[0].timestamp
+					config.insidemin = config.min
+					if (storage.length > 2) {
+						config.insidemin = storage[1].timestamp
+					}
+					config.max = storage[storage.length - 1].timestamp
 				}
 
 				store = function (val) {
@@ -305,12 +311,7 @@ module.exports = function (RED) {
 					} else {
 						addToStore(val)
 					}
-					config.min = storage[0].timestamp
-					config.insidemin = config.min
-					if (storage.length > 2) {
-						config.insidemin = storage[1].timestamp
-					}
-					config.max = storage[storage.length - 1].timestamp
+
 
 					showInfo()
 					storeInContext()
