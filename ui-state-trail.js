@@ -685,9 +685,11 @@ module.exports = function (RED) {
 					right: (100 - edge),
 					tyt: tyt,
 					tyb: tyb,
-					dot: dot
-
-
+					dot: dot,
+					padding: {
+						hor:'6px',
+						vert:(site.sizes.sy/16)+'px'
+					}
 				}
 				config.stripe.mousemin = config.stripe.left * config.exactwidth / 100
 				config.stripe.mousemax = config.stripe.right * config.exactwidth / 100
@@ -812,17 +814,28 @@ module.exports = function (RED) {
 						}
 
 						var update = function (data) {
-							var gradient = document.getElementById("statra_gradi_" + $scope.unique);
-							if (!gradient) {
+							var main = document.getElementById("statra_svg_" + $scope.unique);
+							if (!main) {
 								$scope.timeout = setTimeout(update.bind(null, data), 40);
 								return
 							}
 							$scope.timeout = null
+							updateContainerStyle(main,$scope.sizes.padding)
 							updateGradient(data.stops)
 							updateTicks(data.ticks)
 							updateLegend(data.legend)
 							updateSplitters(data.splits)
 							updateDots(data.dots)
+						}
+						
+						var updateContainerStyle = function(el,padding){
+							el = el.parentElement
+							if(el && el.classList.contains('nr-dashboard-template')){
+								if($(el).css('paddingLeft') == '0px'){
+									el.style.paddingLeft = el.style.paddingRight = padding.hor
+									el.style.paddingTop = el.style.paddingBottom = padding.vert
+								}
+							}							
 						}
 
 						var updateSplitters = function (splits) {
