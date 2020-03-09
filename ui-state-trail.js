@@ -826,6 +826,14 @@ module.exports = function (RED) {
 							updateLegend(data.legend)
 							updateSplitters(data.splits)
 							updateDots(data.dots)
+							updateBlankLabel()							
+						}
+						
+						var updateBlankLabel = function(){							
+							var el = document.getElementById("statra_blank_" + $scope.unique);
+							if(el){
+								$(el).attr('visibility',$scope.mouselock > 1 ? 'hidden' : 'visible')
+							}
 						}
 						
 						var updateContainerStyle = function(el,padding){
