@@ -27,7 +27,7 @@ module.exports = function (RED) {
 	function HTML(config) {
 		var data = JSON.stringify(config.initial);
 		var sizes = JSON.stringify(config.stripe);
-		var styles = String.raw `
+		var styles = String.raw`
 		
 		<style>
 			.txt-{{unique}} {	
@@ -48,8 +48,8 @@ module.exports = function (RED) {
 				border: 0
 			}								
 		</style>`
-		var gradient = String.raw `fill="url(#statra_gradi_{{unique}})"`
-		var layout = String.raw `		
+		var gradient = String.raw`fill="url(#statra_gradi_{{unique}})"`
+		var layout = String.raw`		
 			<svg preserveAspectRatio="xMidYMid meet" id="statra_svg_{{unique}}" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg" ng-init='init(` + data + `,` + sizes + `)'>
 				<defs>
 					<linearGradient id="statra_gradi_{{unique}}" x2="100%" y2="0%">					
@@ -82,7 +82,7 @@ module.exports = function (RED) {
 					visibility="hidden" x1="0" y1="${config.stripe.tyt}%" x2="0" y2="${config.stripe.tyb}%" 
 					style="stroke:currentColor;stroke-width:1" />				
 			</svg>`
-		return String.raw `${styles}${layout}`;
+		return String.raw`${styles}${layout}`;
 	}
 
 	function checkConfig(node, conf) {
@@ -653,7 +653,7 @@ module.exports = function (RED) {
 					delete evt.targetX
 					return {
 						payload: pl,
-						clickCoordinates: evt
+						event: evt
 					}
 				}
 
@@ -687,8 +687,8 @@ module.exports = function (RED) {
 					tyb: tyb,
 					dot: dot,
 					padding: {
-						hor:'6px',
-						vert:(site.sizes.sy/16)+'px'
+						hor: '6px',
+						vert: (site.sizes.sy / 16) + 'px'
 					}
 				}
 				config.stripe.mousemin = config.stripe.left * config.exactwidth / 100
@@ -790,12 +790,20 @@ module.exports = function (RED) {
 							if (e.originalEvent.offsetX < $scope.sizes.mousemin || e.originalEvent.offsetX > $scope.sizes.mousemax) {
 								return
 							}
+							//console.log(e.originalEvent.target.getBBox())
+							var bbc = e.originalEvent.target.getBoundingClientRect()
+
+
+							var box = [bbc.left, bbc.bottom, bbc.right, bbc.top]
 							var coord = {
+								pageX: e.originalEvent.screenX,
+								pageY: e.originalEvent.screenY,
 								screenX: e.originalEvent.screenX,
 								screenY: e.originalEvent.screenY,
 								clientX: e.originalEvent.clientX,
 								clientY: e.originalEvent.clientY,
-								targetX: e.originalEvent.offsetX
+								targetX: e.originalEvent.offsetX,
+								bbox: box
 							}
 							$scope.send({
 								clickevent: coord
@@ -820,30 +828,30 @@ module.exports = function (RED) {
 								return
 							}
 							$scope.timeout = null
-							updateContainerStyle(main,$scope.sizes.padding)
+							updateContainerStyle(main, $scope.sizes.padding)
 							updateGradient(data.stops)
 							updateTicks(data.ticks)
 							updateLegend(data.legend)
 							updateSplitters(data.splits)
 							updateDots(data.dots)
-							updateBlankLabel()							
+							updateBlankLabel()
 						}
-						
-						var updateBlankLabel = function(){							
+
+						var updateBlankLabel = function () {
 							var el = document.getElementById("statra_blank_" + $scope.unique);
-							if(el){
-								$(el).attr('visibility',$scope.mouselock > 1 ? 'hidden' : 'visible')
+							if (el) {
+								$(el).attr('visibility', $scope.mouselock > 1 ? 'hidden' : 'visible')
 							}
 						}
-						
-						var updateContainerStyle = function(el,padding){
+
+						var updateContainerStyle = function (el, padding) {
 							el = el.parentElement
-							if(el && el.classList.contains('nr-dashboard-template')){
-								if($(el).css('paddingLeft') == '0px'){
+							if (el && el.classList.contains('nr-dashboard-template')) {
+								if ($(el).css('paddingLeft') == '0px') {
 									el.style.paddingLeft = el.style.paddingRight = padding.hor
 									el.style.paddingTop = el.style.paddingBottom = padding.vert
 								}
-							}							
+							}
 						}
 
 						var updateSplitters = function (splits) {

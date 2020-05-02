@@ -25,7 +25,7 @@ The value for period should be given in milliseconds.
 
 For example to set period to 5 minutes, send 
 ``` javascript
-msg.control.period = 300000
+msg.control = {period:300000}
 ```
         
 
@@ -97,7 +97,7 @@ msg.payload = []
 
 ## Output
 
-By clicking the chart bar, the widget sends message. Output msg contains clicked state in <code>msg.payload</code> and coordinates of click in <code>msg.clickCoordinates</code> 
+By clicking the chart bar, the widget sends message. Output msg contains clicked state in <code>msg.payload</code> and coordinates of click in <code>msg.event</code>. The order of values in <code>event.bbox</code> is <code>left bottom right top</code>  
 
 ![Node-RED dashboard widget state-trail click-output](images/click-output.JPG)
  
@@ -143,21 +143,20 @@ Dm = 3600 / 306 / 2 = 5,88 sec
 
 ## Change the configuration at runtime
 
-Some options of widget configuration can be overrided at runtime
-Usage of <code>msg.options</code> property 
+Some options of widget configuration can be overrided at runtime by using the <code>msg.control</code> property.
 
 ### Change configured period
-Configured period can be overrided by using <code>msg.control.period</code> property.
+Configured period can be overrided by using <code>control.period</code> property.
 The value for period should be given in milliseconds. 
 
 For example to set period to 5 minutes, send 
 ``` javascript
-msg.control.period = 300000
+msg.control = {period:300000}
 ```
 
 ### Change the states
 
-All states can be overrided by using <code>msg.control.states</code> property. Note that you can't adjust or change any of configured states individually.
+All states can be overrided by using <code>control.states</code> property. Note that you can't adjust or change any of configured states individually.
 
 **All states must be unique!**
 

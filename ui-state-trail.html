@@ -333,29 +333,29 @@ SOFTWARE.
                     var labelField
 
                     propField = $('<input/>', {
-                            class: "node-input-rule-state-value",
-                            style: "width:120px;",
-                            type: "text"
-                        })
+                        class: "node-input-rule-state-value",
+                        style: "width:120px;",
+                        type: "text"
+                    })
                         .appendTo(row)
                         .typedInput({
                             types: ['bool', 'str', 'num']
                         });
 
                     colorField = $('<input/>', {
-                            value: rule.col,
-                            class: "node-input-rule-state-color",
-                            style: "width:80px; margin-left:8px;",
-                            type: "color"
-                        })
+                        value: rule.col,
+                        class: "node-input-rule-state-color",
+                        style: "width:80px; margin-left:8px;",
+                        type: "color"
+                    })
                         .appendTo(row)
 
                     labelField = $('<input/>', {
-                            class: "node-input-rule-state-label",
-                            style: "width:160px; margin-left:8px;",
-                            type: "text",
-                            placeholder: 'optional'
-                        })
+                        class: "node-input-rule-state-label",
+                        style: "width:160px; margin-left:8px;",
+                        type: "text",
+                        placeholder: 'optional'
+                    })
                         .appendTo(row)
                         .typedInput({
                             types: ['str']
@@ -456,8 +456,8 @@ SOFTWARE.
   
     <h2>Period</h2>
     <p>Time period. If configured to long period, keep input rate low. Too much data may harm performance significantly.
-    <p>Configured period can be overrided by using <code>msg.control.period</code> property. The value for period should be given in milliseconds.
-    <p>For example to set period to 5 minutes, send <code>msg.control.period = 300000</code>
+    <p>Configured period can be overrided by using <code>control.period</code> property. The value for period should be given in milliseconds.
+    <p>For example to set period to 5 minutes, send <code>msg.control = {period:300000}</code>
         
 
     <h2>Time format and Ticks</h2>
@@ -518,7 +518,8 @@ SOFTWARE.
 
 <p>By clicking the chart bar, the widget sends message. 
 Output msg contains clicked state in <code>msg.payload</code> 
-and coordinates of click in <code>msg.clickCoordinates</code>
+and coordinates of click in <code>msg.event</code>. 
+The order of values in <code>event.bbox</code> is <code>left bottom right top</code>
 
 
 <h2>Data Storage</h2>
@@ -533,21 +534,20 @@ storage - <a href="https://nodered.org/docs/user-guide/context#saving-context-da
 <br>
 <h3>Change the configuration at runtime</h3>
 
-<p>Some options of widget configuration can be overrided at runtime
-<p>Usage of <code>msg.options</code> property 
+<p>Some options of widget configuration can be overrided at runtime by using the <code>msg.control</code> property 
 
 <h2>Change configured period</h2>
-Configured period can be overrided by using <code>msg.control.period</code> property.
+Configured period can be overrided by using <code>control.period</code> property.
 The value for period should be given in milliseconds. 
 
 For example to set period to 5 minutes, send 
 <code>
-msg.control.period = 300000
+msg.control = {period:300000}
 </code>
 
 <h2>Change the states</h2>
 
-<p>All states can be overrided by using <code>msg.control.states</code> property. Note that you can't adjust or change any of configured states individually.
+<p>All states can be overrided by using <code>control.states</code> property. Note that you can't adjust or change any of configured states individually.
 
 <p><b>All states must be unique!</b>
 
