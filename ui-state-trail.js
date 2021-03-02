@@ -234,10 +234,7 @@ module.exports = function (RED) {
 										var xp = getPosition(el.end, config.insidemin, config.max)
 										var nxp = getPosition(arr[idx + 1].timestamp, config.insidemin, config.max)
 										var wp = nxp - xp
-										splitters.push({
-											x: xp,
-											width: wp + '%'
-										})
+										splitters.push({x: xp,width: wp + '%'})
 									}
 								}
 							}
@@ -423,17 +420,9 @@ module.exports = function (RED) {
 					if (storage.length < 2) {
 						return ret
 					}
-					var o = {
-						p: 0,
-						c: getColor(storage[0].state),
-						a: 0
-					}
+					var o = {p: 0, c: getColor(storage[0].state),a: 0}
 					ret.push(o)
-					o = {
-						p: config.stripe.left,
-						c: getColor(storage[0].state),
-						a: 1
-					}
+					o = {p: config.stripe.left,	c: getColor(storage[0].state),a: 1}
 					ret.push(o)
 					var i
 					var po
@@ -442,37 +431,17 @@ module.exports = function (RED) {
 						if (isNaN(po)) {
 							continue
 						}
-						o = {
-							p: po,
-							c: getColor(storage[i - 1].state),
-							a: 1
-						}
+						o = {p: po,	c: getColor(storage[i - 1].state),	a: 1}
 						ret.push(o)
-						o = {
-							p: po,
-							c: getColor(storage[i].state),
-							a: 1
-						}
+						o = {p: po,	c: getColor(storage[i].state),	a: 1}
 						ret.push(o)
 						po = getPosition(storage[i + 1].timestamp, config.insidemin, config.max)
 					}
-					o = {
-						p: config.stripe.right,
-						c: getColor(storage[storage.length - 2].state),
-						a: 1
-					}
+					o = {p: config.stripe.right,c: getColor(storage[storage.length - 2].state),	a: 1}
 					ret.push(o)
-					o = {
-						p: config.stripe.right,
-						c: getColor(storage[storage.length - 1].state),
-						a: 1
-					}
+					o = {p: config.stripe.right,c: getColor(storage[storage.length - 1].state),a: 1}
 					ret.push(o)
-					o = {
-						p: 100,
-						c: getColor(storage[storage.length - 1].state),
-						a: 0
-					}
+					o = {p: 100,c: getColor(storage[storage.length - 1].state),a: 0}
 					ret.push(o)
 					if (!config.combine) {
 						findSplitters()
@@ -780,10 +749,8 @@ module.exports = function (RED) {
 							if (e.originalEvent.offsetX < $scope.sizes.mousemin || e.originalEvent.offsetX > $scope.sizes.mousemax) {
 								return
 							}
-							//console.log(e.originalEvent.target.getBBox())
+							
 							var bbc = e.originalEvent.target.getBoundingClientRect()
-
-
 							var box = [bbc.left, bbc.bottom, bbc.right, bbc.top]
 							var coord = {
 								pageX: e.originalEvent.screenX,
