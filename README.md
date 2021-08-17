@@ -13,10 +13,6 @@
 
 Node-RED dashboard widget. Gantt type chart to visualize state changes over time period.
 
-### Alert 
-Breaking change with version 0.3.0. 
-
-If you were using the output of this node and your flow the makes use of <code>msg.clickCoordinates</code>, you will need to change this property name to <code>msg.event</code>
 
 ## Configuration
 ### Label
