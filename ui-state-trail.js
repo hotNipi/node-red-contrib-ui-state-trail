@@ -492,11 +492,11 @@ module.exports = function (RED) {
 					var o
 					var po
 					var t
-					var total = config.max - config.min
+					var total = config.max - config.insidemin
 					var step = (total / (config.tickmarks - 1))
 					for (let i = 0; i < config.tickmarks; i++) {
-						t = storage[0].timestamp + (step * i)
-						po = getPosition(t, config.min, config.max)
+						t = storage[1].timestamp + (step * i)
+						po = getPosition(t, config.insidemin, config.max)
 						o = {
 							x: po,
 							v: formatTime(t),
@@ -653,7 +653,7 @@ module.exports = function (RED) {
 				config.stripe.mousemin = config.stripe.left * config.exactwidth / 100
 				config.stripe.mousemax = config.stripe.right * config.exactwidth / 100
 
-				config.period = parseInt(config.periodLimit) * parseInt(config.periodLimitUnit) * 1000
+				config.period = (parseInt(config.periodLimit) * parseInt(config.periodLimitUnit) * 1000) + 1000
 				config.tickmarks = config.tickmarks || 4
 				config.legend = parseInt(config.legend)
 
