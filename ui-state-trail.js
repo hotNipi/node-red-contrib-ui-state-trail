@@ -109,6 +109,8 @@ module.exports = function (RED) {
 			var getPosition = null;
 			var getTimeFromPos = null;
 			var checkPayload = null;
+			var validReferenceInArray = null
+			var checkReference = null;
 			var store = null;
 			var generateGradient = null;
 			var generateTicks = null;
@@ -117,6 +119,7 @@ module.exports = function (RED) {
 			var validType = null;
 			var validObject = null;
 			var storage = null;
+			var references = null
 			var storeInContext = null;
 			var prepareStorage = null;
 			var stroageSpace = null;
@@ -125,6 +128,7 @@ module.exports = function (RED) {
 			var getStateFromCoordinates = null;
 			var generateOutMessage = null;
 			var addToStore = null;
+			var addToRef = null;
 			var findSplitters = null;
 			var findDots = null;
 			var isValidStateConf = null;
@@ -164,6 +168,49 @@ module.exports = function (RED) {
 					}
 					return ret
 				}
+
+				checkReference = function (input,validPayload){
+					if(!input){
+						return null
+					}
+					//console.log("checkReference",input,validPayload)
+					if (Array.isArray(validPayload)){
+						if (input.every(ob => validReferenceInArray(ob))) {
+							return input
+						}
+						else{
+							return []
+						}
+					}else{
+						if (Array.isArray(input)){
+							// cant be array if payload isn't
+							return null
+						}
+						else{
+							if(input.hasOwnProperty("timestamp")){
+								return input
+							}
+							else{
+								return {
+									data:input,
+									timestamp:validPayload.timestamp
+								}
+							}
+						}
+					}
+				}
+				validReferenceInArray = function (input) {
+					if (input == undefined) {
+						return false
+					}
+					if (input.hasOwnProperty("timestamp")) {
+						return true
+					}
+					return false
+				}
+
+
+
 				validObject = function (input) {
 					if (input == undefined) {
 						return false
@@ -293,10 +340,28 @@ module.exports = function (RED) {
 					config.max = storage[storage.length - 1].timestamp
 				}
 
-				store = function (val) {
+				addToRef = function(r){
+					references.push(r)
+					var temp = [...references]					
+					//console.log('ref before:',references,storage)
+					function matchedTimestamp(r){
+						var m = storage.find(e => e.timestamp == r.timestamp)
+						if(m){
+							return true
+						}
+						return false
+					}
+					temp = temp.filter(r => matchedTimestamp(r))
+					//console.log('ref after filter:',temp)
+
+					references = temp										
+				}
+
+				store = function (val,ref) {
 					if (Array.isArray(val)) {
 						if (val.length == 0) {
 							storage = []
+							references = []
 							config.max = new Date().getTime()
 							config.min = config.max - config.period
 							storeInContext()
@@ -304,11 +369,15 @@ module.exports = function (RED) {
 						} else {
 							storage = []
 							val.forEach(s => addToStore(s))
+							references = []
+							ref.forEach(r => addToRef(r))
 						}
 					} else {
 						addToStore(val)
+						if(ref){
+							addToRef(ref)
+						}						
 					}
-
 
 					showInfo()
 					storeInContext()
@@ -531,6 +600,7 @@ module.exports = function (RED) {
 					}
 					if (force == true || config.persist == true) {
 						ctx.set('stateTrailStorage', storage, stroageSpace)
+						ctx.set('stateTrailReferences', references, stroageSpace)
 						ctx.set('stateTrailMax', config.max, stroageSpace)
 						ctx.set('stateTrailMin', config.min, stroageSpace)
 					}
@@ -610,10 +680,15 @@ module.exports = function (RED) {
 				generateOutMessage = function (evt) {
 					var pl = getStateFromCoordinates(evt.targetX)
 					delete evt.targetX
-					return {
+					var ret = {
 						payload: pl,
 						event: evt
 					}
+					var ref = references.find(el => el.timestamp == pl.timestamp)
+					if(ref){
+						ret.reference = ref
+					}
+					return ret
 				}
 
 				var group = RED.nodes.getNode(config.group);
@@ -660,6 +735,7 @@ module.exports = function (RED) {
 				prepareStorage()
 
 				storage = (config.persist && stroageSpace != null) ? ctx.get('stateTrailStorage', stroageSpace) || [] : []
+				references = (config.persist && stroageSpace != null) ? ctx.get('stateTrailReferences', stroageSpace) || [] : []
 				config.max = (config.persist && stroageSpace != null) ? ctx.get('stateTrailMax', stroageSpace) || new Date().getTime() : new Date().getTime()
 				config.min = (config.persist && stroageSpace != null) ? ctx.get('stateTrailMin', stroageSpace) || (config.max - config.period) : (config.max - config.period)
 				config.insidemin = storage.length < 3 ? config.min : storage[1].timestamp
@@ -705,7 +781,8 @@ module.exports = function (RED) {
 						if (validated === null) {
 							return {}
 						}
-						store(validated)
+						var reference = checkReference(msg.reference,validated)
+						store(validated,reference)
 						msg.payload = {
 							stops: generateGradient(),
 							ticks: generateTicks(),
