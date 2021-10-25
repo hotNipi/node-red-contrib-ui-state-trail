@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 -->
 
-<script type='text/x-red' data-template-name='ui_statetrail'>
+<script type='text/html' data-template-name='ui_statetrail'>
     <div class='form-row' id='template-row-group'>
         <label for='node-input-group'><i class='fa fa-table'></i> Group</span></label>
         <input type='text' id='node-input-group'>
@@ -53,7 +53,10 @@ SOFTWARE.
     <label for='node-input-tickmarks' style='width:33px'>Ticks</label>
     <input type='number' id='node-input-tickmarks' min='2' max='25' value='4' size='1' style='width:47px' >
 </div>
-
+<div class="form-row" style="margin-bottom:0;">
+    <label><i class="fa fa-list"></i> States:</label>
+    <span id="configError" style="color:#DD0000"><b>All Values must be unique.</b></span>
+</div>
 <div class="form-row node-input-rule-container-row">
     <ol id="node-input-rule-container"></ol>    
 </div>
@@ -90,13 +93,13 @@ SOFTWARE.
 </div>
 </script>
 <script type='text/javascript'>
-    var ERR_COUNT = "Configure at least 2 states!"
-    var ERR_UNIQUE = "All states must be unique!"
-
+    const ERR_COUNT = "Configure at least 2 states!"
+    const ERR_UNIQUE = "All states must be unique!"
+    
     RED.nodes.registerType('ui_statetrail', {
         category: 'dashboard',
         color: 'rgb( 63, 173, 181)',
-        configError: '',
+        configError: '',        
         defaults: {
             group: {
                 type: 'ui_group',
@@ -139,17 +142,10 @@ SOFTWARE.
                     label: ''
                 }],
                 validate: function (v) {
-                    configError = ""
-                    var unique = [...new Set(v.map(s => s.state))]
-                    var valid = true
-                    if (v.length < 2) {
-                        configError = ERR_COUNT
-                        valid = false
-                    } else if (v.length != unique.length) {
-                        configError = ERR_UNIQUE
-                        valid = false
-                    }
-                    return valid
+
+                    var unique = new Set(v.map(function(o) {return o.state;}));
+                    return v.length == unique.size && v.length > 1;
+               
                 }
             },
             periodLimit: {
@@ -193,6 +189,8 @@ SOFTWARE.
             return this.name || 'State-trail';
         },
         oneditprepare: function () {
+
+            var lastRuleType = "bool"            
             function getColor(idx) {
                 var colors = ['#009933', '#999999', '#ff6666', '#009999', '#cccc00', '#ff33cc', '#cc6600',
                     '#99ff66', '#660033'
@@ -202,26 +200,30 @@ SOFTWARE.
                 }
                 return colors[idx]
             }
+            function setLastType(t){                
+                lastRuleType = t;
+            }
 
             function defaultRule(idx) {
                 return {
-                    state: true,
+                    state: lastRuleType == 'bool' ? true : "",
                     col: getColor(idx),
-                    t: "bool",
+                    t:lastRuleType,
                     label: ''
                 }
             }
 
-            function ruleInfo(error) {
+           /*  function ruleInfo(error) {
                 $('#error-ruleinfo').text(error);
                 $('.red-ui-editableList-border').toggleClass('input-error', (error != ""));
             }
-
+ */
             $('#node-input-size').elementSizer({
                 width: '#node-input-width',
                 height: '#node-input-height',
                 group: '#node-input-group'
             });
+            
 
             if (this.tickmarks === undefined) {
                 this.tickmarks = 4;
@@ -315,13 +317,13 @@ SOFTWARE.
                 }).append($.parseHTML(`
                     <div style='width:120px; text-align:center; display: inline-grid'><b>State</b></div> 
                     <div style='width:80px; text-align:center; display: inline-grid'><b>Color</b></div>
-                    <div style='width:160px; text-align:center; display: inline-grid'><b>Label</b></div>
-                    <div id='error-ruleinfo' style='width:220px; color:red; text-align:center; font-weight:bold; display:inline-grid'></div>  
-                    `)),
+                    <div style='width:160px; text-align:center; display: inline-grid'><b>Label</b></div> `)),
                 addItem: function (container, index, rule) {
+                    
                     if (!rule.hasOwnProperty('state')) {
                         rule = defaultRule(index)
                     }
+                    //console.log(rule)
                     container.css({
                         overflow: 'hidden',
                         whiteSpace: 'nowrap'
@@ -335,50 +337,34 @@ SOFTWARE.
                     propField = $('<input/>', {
                         class: "node-input-rule-state-value",
                         style: "width:120px;",
-                        type: "text"
-                    })
-                        .appendTo(row)
-                        .typedInput({
-                            types: ['bool', 'str', 'num']
-                        });
+                        type: "text",
+                        value:rule.state
+                    }).appendTo(row).typedInput({types: ['bool', 'str', 'num'], default:rule.t});
 
                     colorField = $('<input/>', {
                         value: rule.col,
                         class: "node-input-rule-state-color",
                         style: "width:80px; margin-left:8px;",
                         type: "color"
-                    })
-                        .appendTo(row)
+                    }).appendTo(row)
 
                     labelField = $('<input/>', {
                         class: "node-input-rule-state-label",
                         style: "width:160px; margin-left:8px;",
                         type: "text",
+                        value:rule.label,
                         placeholder: 'optional'
-                    })
-                        .appendTo(row)
-                        .typedInput({
-                            types: ['str']
-                        });
+                    }).appendTo(row).typedInput({types: ['str']});
 
-                    propField.typedInput('value', rule.state);
-                    labelField.typedInput('value', rule.label)
-                    propField.typedInput('type', rule.t);
                     propField.typedInput().on('change', function (type, value) {
-                        if (configError == ERR_UNIQUE) {
-                            configError = ""
-                            ruleInfo(configError)
-                        }
-                    });
-                    if (index > 0 && configError == ERR_COUNT) {
-                        configError = ""
-                        ruleInfo(configError)
-                    }
+                        validate()                     
+                        setLastType(value) 
+                    }); 
+                   validate()
 
                 },
                 removeItem: function (data) {
-                    configError = ""
-                    ruleInfo(configError)
+                   validate()
                 }
             });
 
@@ -402,9 +388,61 @@ SOFTWARE.
                 var rule = this.states[i];
                 $("#node-input-rule-container").editableList('addItem', rule);
             }
-            ruleInfo(configError)
+           
 
+            function validate(){
+                var states = $("#node-input-rule-container").editableList('items');
+                var node = this;
 
+                node.states = [];
+                var convert = function (rule) {
+                    if (rule.t === 'str') {
+                        return rule
+                    }
+                    if (rule.t === 'bool') {
+                        rule.state = rule.state == "true" ? true : false
+                    }
+                    if (rule.t == 'num') {
+                        rule.state = parseFloat(rule.state)
+                    }
+                    return rule
+                }
+
+                states.each(function (i) {
+                    var rule = $(this);
+                    var st = rule.find(".node-input-rule-state-value").typedInput('value')
+                    var tp = rule.find(".node-input-rule-state-value").typedInput('type')
+                    var co = rule.find(".node-input-rule-state-color").val();
+                    var lb = rule.find(".node-input-rule-state-label").typedInput('value')
+                    var r = convert({
+                        state: st,
+                        col: co,
+                        t: tp,
+                        label: lb
+                    })
+                    node.states.push(r);
+
+                });
+               
+                if (node.states.length != un.size) {                   
+                    $("#configError").text("Configured states must be unique")
+                    $("#configError").show();
+                    $('.red-ui-editableList-border').toggleClass('input-error', true);
+                }
+                else if(node.states.length < 2){                   
+                    $("#configError").text("Configure at least two states")
+                    $("#configError").show();
+                    $('.red-ui-editableList-border').toggleClass('input-error', true);
+                }
+                else {
+                    //  valid
+                    $("#configError").hide();
+                    $('.red-ui-editableList-border').toggleClass('input-error', false);
+                }
+            }
+            if(this.states){
+                validate();
+            }
         },
         oneditsave: function () {
 

@@ -550,7 +550,7 @@ module.exports = function (RED) {
 						return
 					}
 					var total = storage.length + 2
-					var f = total > 700 ? "red" : total > 400 ? "yellow" : "green"
+					var f = total > 1000 ? "red" : total > 700 ? "blue" : total > 400 ? "yellow" : "green"
 					var s = total > 200 ? "dot" : "ring"
 					node.status({
 						fill: f,
