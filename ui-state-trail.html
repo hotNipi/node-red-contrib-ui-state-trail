@@ -423,8 +423,9 @@ SOFTWARE.
                     node.states.push(r);
 
                 });
+                var unique = new Set(node.states.map(function(o) {return o.state;}));
                
-                if (node.states.length != un.size) {                   
+                if (node.states.length != unique.size) {                   
                     $("#configError").text("Configured states must be unique")
                     $("#configError").show();
                     $('.red-ui-editableList-border').toggleClass('input-error', true);
