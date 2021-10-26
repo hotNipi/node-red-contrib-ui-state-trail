@@ -554,6 +554,7 @@ module.exports = function (RED) {
 				}
 
 				generateTicks = function () {
+					//console.log(storage[1].timestamp - storage[0].timestamp, config.period)
 					var ret = []
 					if (storage.length < 2) {
 						return ret
@@ -561,18 +562,21 @@ module.exports = function (RED) {
 					var o
 					var po
 					var t
+					var vis
 					var total = config.max - config.insidemin
-					var step = (total / (config.tickmarks - 1))
+					var step = (total / (config.tickmarks - 1))					
 					for (let i = 0; i < config.tickmarks; i++) {
-						t = storage[1].timestamp + (step * i)
-						po = getPosition(t, config.insidemin, config.max)
+						t = storage[1].timestamp + (step * i)						
+						po = getPosition(t, config.insidemin, config.max)							
+						vis = ret.find(el => el.x == po) ? "hidden" : "visible" 				
 						o = {
 							x: po,
 							v: formatTime(t),
-							id: i
+							id: i,
+							vis:vis
 						}
 						ret.push(o)
-					}
+					}					
 					return ret
 				}
 
@@ -1024,14 +1028,15 @@ module.exports = function (RED) {
 								if (tick) {
 									$(tick).attr('x1', times[i].x + "%");
 									$(tick).attr('x2', times[i].x + "%");
-									if ($(tick).attr('visibility') != 'visible') {
-										$(tick).attr('visibility', 'visible')
-									}
+									
+									$(tick).attr('visibility', times[i].vis)
+									
 								}
 								tick = document.getElementById("statra_tickval_" + $scope.unique + "_" + times[i].id);
 								if (tick) {
 									$(tick).text(times[i].v);
 									$(tick).attr('x', times[i].x + "%");
+									$(tick).attr('visibility', times[i].vis)
 								}
 							}
 						}
