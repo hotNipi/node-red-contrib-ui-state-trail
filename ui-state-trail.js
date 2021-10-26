@@ -388,25 +388,28 @@ module.exports = function (RED) {
 					var i
 					var total = 0
 					var z = 0
-					var p = 0
-					var trail = 0
+					var p = 0					
 					var len = storage.length
-					for (i = 0; i < config.states.length; i++) {
-						if (!sum.hasOwnProperty(config.states[i].state)) {
-							sum[config.states[i].state] = 0
+
+					for (i = 0; i < len -1; i++) {										
+						if(storage[i].end){
+							z = storage[i].end - storage[i].timestamp
 						}
-					}
-					for (i = 1; i < len; i++) {
-						trail = 0
-						if (storage[i - 1].hasOwnProperty('end')) {
-							trail = storage[i - 1].end - storage[i - 1].timestamp
+						else{
+							z = storage[i+1].timestamp - storage[i].timestamp
 						}
-						z = storage[i].timestamp - storage[i - 1].timestamp - trail
-						sum[storage[i - 1].state] += z
-						total += z
+						
+						if(!sum[storage[i].state]){
+							sum[storage[i].state] = 0
+						}					
+						sum[storage[i].state] += z						
 					}
+					total = storage[len - 1].timestamp - storage[0].timestamp
 					var ret = []
 					for (i = 0; i < config.states.length; i++) {
+						if(!sum[config.states[i].state]){
+							sum[config.states[i].state] = 0
+						}
 						p = (100 * sum[config.states[i].state] / total)
 						if (isNaN(p)) {
 							p = 0
@@ -669,6 +672,10 @@ module.exports = function (RED) {
 					}
 					var current = storage[idx]
 					var next = storage[idx + 1]
+					var dur = next.timestamp - current.timestamp
+					if(current.end){
+						dur = current.end - current.timestamp
+					}
 					var dur = next.timestamp - current.timestamp
 					var lab = config.states.find(s => s.state == current.state).label
 					var ret = {
