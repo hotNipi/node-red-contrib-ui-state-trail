@@ -384,6 +384,10 @@ module.exports = function (RED) {
 				}
 
 				collectSummary = function () {
+					var ret = []
+					if(storage.length == 0){
+						return ret
+					}
 					var sum = {}
 					var i
 					var total = 0
