@@ -409,7 +409,6 @@ module.exports = function (RED) {
 						sum[storage[i].state] += z						
 					}
 					total = storage[len - 1].timestamp - storage[0].timestamp
-					var ret = []
 					for (i = 0; i < config.states.length; i++) {
 						if(!sum[config.states[i].state]){
 							sum[config.states[i].state] = 0
@@ -674,18 +673,23 @@ module.exports = function (RED) {
 					if (idx == -1) {
 						return null
 					}
-					var current = storage[idx]
+					var current = storage[idx]					
 					var next = storage[idx + 1]
 					var dur = next.timestamp - current.timestamp
 					if(current.end){
 						dur = current.end - current.timestamp
 					}
-					var dur = next.timestamp - current.timestamp
-					var lab = config.states.find(s => s.state == current.state).label
+					var end = current.end || next.timestamp
+					
+					var stateRef = config.states.find(s => s.state == current.state)
+					var lab = "" 
+					if(stateRef){
+						lab = stateRef.label
+					}
 					var ret = {
 						state: current.state,
 						timestamp: current.timestamp,
-						end: next.timestamp,
+						end: end,
 						duration: dur,
 						label: lab
 					}
