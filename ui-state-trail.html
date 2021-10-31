@@ -98,13 +98,8 @@ SOFTWARE.
         color: 'rgb( 63, 173, 181)',
         configError: '',        
         defaults: {
-            group: {
-                type: 'ui_group',
-                required: true
-            },
-            order: {
-                value: 0
-            },
+            group: {type: 'ui_group', required: true},
+            order: {value: 0},
             width: {
                 value: 0,
                 validate: function (v) {
@@ -117,15 +112,9 @@ SOFTWARE.
                     return valid;
                 }
             },
-            height: {
-                value: 0
-            },
-            name: {
-                value: ''
-            },
-            label: {
-                value: ''
-            },
+            height: {value: 0},
+            name: {value: ''},
+            label: {value: ''},
             states: {
                 value: [{
                     state: true,
@@ -139,10 +128,8 @@ SOFTWARE.
                     label: ''
                 }],
                 validate: function (v) {
-
                     var unique = new Set(v.map(function(o) {return o.state;}));
-                    return v.length == unique.size && v.length > 1;
-               
+                    return v.length == unique.size && v.length > 1;               
                 }
             },
             periodLimit: {
@@ -150,33 +137,17 @@ SOFTWARE.
                 validate: RED.validators.number(),
                 required: true
             },
-            periodLimitUnit: {
-                value: '3600',
-                required: true
-            },
-            timeformat: {
-                value: 'HH:mm:ss'
-            },
-            tickmarks: {
-                val: 4,
-                required: true
-            },
-            persist: {
-                val: false,
-                required: true
-            },
+            periodLimitUnit: {value: '3600',required: true},
+            timeformat: {value: 'HH:mm:ss'},
+            tickmarks: {val: 4, required: true},
+            persist: {val: false, required: true},
             legend: {
                 value: 1,
                 validate: RED.validators.number(),
                 required: true
             },
-            combine: {
-                val: true,
-                required: true
-            },
-            blanklabel: {
-                value: ''
-            }
+            combine: {val: true, required: true},
+            blanklabel: {value: ''}
         },
         inputs: 1,
         outputs: 1,
@@ -210,11 +181,6 @@ SOFTWARE.
                 }
             }
 
-           /*  function ruleInfo(error) {
-                $('#error-ruleinfo').text(error);
-                $('.red-ui-editableList-border').toggleClass('input-error', (error != ""));
-            }
- */
             $('#node-input-size').elementSizer({
                 width: '#node-input-width',
                 height: '#node-input-height',
@@ -528,6 +494,15 @@ SOFTWARE.
         <dd> 
             msg.payload should carry single value of one of configured states.
             <code>msg.payload = true</code>
+        </dd>
+        <br>
+        <dt>reference
+            <span class="property-type">String|Number|Object|Array</span>           
+        </dt>
+        
+        <dd> 
+            msg.reference can be any data related to the state.
+            <code>msg.reference = "This is reference of the state." </code>
         </dd>
         <br>
         <dd>    

@@ -94,11 +94,23 @@ To clear the data, send an empty array
 msg.payload = []
 ```
 
+<code>msg.reference</code> can be any string or number or object.
 
+``` javascript
+msg.reference = "This state change has reference text"
+```
+The reference of state is additional data you can send to the widget. For example you have states on, off and error. But there may be many error cases. So you can send the reason of error alongside the msg.payload. Then by clicking on the error state, the payload from the widget contains  also  the reference object. 
+
+Sending the reference alone (without <code>msg.payload</code>) will end with no reference. 
+References can also be part of a historical data set.  
+
+The reference is not sent to the frontend so it is not possible to see it in any other way but within the click payload. This is done this way to not harm performance
 
 ## Output
 
-By clicking the chart bar, the widget sends message. Output msg contains clicked state in <code>msg.payload</code> and coordinates of click in <code>msg.event</code>. The order of values in <code>event.bbox</code> is <code>left bottom right top</code>  
+By clicking the chart bar, the widget sends message. Output msg contains clicked state in <code>msg.payload</code> and coordinates of click in <code>msg.event</code>. The order of values in <code>event.bbox</code> is <code>left bottom right top</code> 
+
+If clicked state has reference, it is included to the outgoing <code>msg</code>
 
 ![Node-RED dashboard widget state-trail click-output](images/click-output.JPG)
  
