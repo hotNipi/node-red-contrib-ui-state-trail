@@ -76,7 +76,7 @@ module.exports = function (RED) {
 				<g class="statra-{{unique}} split" id="statra_dots_{{unique}}" 
 					style="outline: none; border: 0;"></g>		
 				<text ng-repeat="x in [].constructor(${config.tickmarks}) track by $index" id=statra_tickval_{{unique}}_{{$index}} 
-					class="txt-{{unique}} small" text-anchor="middle" dominant-baseline="baseline" y="95%"></text>
+					class="txt-{{unique}} small" text-anchor="middle" dominant-baseline="baseline" y="${config.stripe.tybt}%"></text>
 				
 				<line ng-repeat="x in [].constructor(${config.tickmarks}) track by $index" id=statra_tick_{{unique}}_{{$index}}
 					visibility="hidden" x1="0" y1="${config.stripe.tyt}%" x2="0" y2="${config.stripe.tyb}%" 
@@ -719,16 +719,25 @@ module.exports = function (RED) {
 					config.height = parseInt(group.config.height) || 1
 				}
 				config.width = parseInt(config.width)
-				config.height = parseInt(config.height) > 2 ? 2 : parseInt(config.height)
+				config.height = parseInt(config.height) //> 2 ? 2 : parseInt(config.height)
 				config.exactwidth = parseInt(site.sizes.sx * config.width + site.sizes.cx * (config.width - 1)) - 12;
 				config.exactheight = parseInt(site.sizes.sy * config.height + site.sizes.cy * (config.height - 1)) - 12;
 
 				var sh = (site.sizes.sy / 2) - 6
-				var sy = config.height == 1 ? 0 : 50
+				if (config.height > 2){
+					sh += (config.height - 2) * (site.sizes.sy)
+				}
+				var sy = config.height == 1 ? 0 : Math.floor(1/config.height*100)
+				if(config.height > 2){
+					sy += site.sizes.cx 
+				} // ' 100// == 1 ? 0 : 50
 				var shp = 100 * sh / config.exactheight
+				
 				var tyt = sy + shp + (100 / config.exactheight)
+				var leg = sy - (100 * 18 / config.exactheight)
 				var dot = sy - (100 * 6 / config.exactheight)
 				var tyb = tyt + (100 * 5 / config.exactheight)
+				var tybt = tyb + (100 * 12 / config.exactheight)
 				var edge = Math.max(config.timeformat.length, 6) * 4 * 100 / config.exactwidth
 				config.stripe = {
 					height: sh,
@@ -737,13 +746,16 @@ module.exports = function (RED) {
 					left: edge,
 					right: (100 - edge),
 					tyt: tyt,
+					leg:leg,
 					tyb: tyb,
+					tybt: tybt,
 					dot: dot,
 					padding: {
 						hor: '6px',
 						vert: (site.sizes.sy / 16) + 'px'
 					}
 				}
+				//console.log(config.stripe)
 				config.stripe.mousemin = config.stripe.left * config.exactwidth / 100
 				config.stripe.mousemax = config.stripe.right * config.exactwidth / 100
 
@@ -875,6 +887,7 @@ module.exports = function (RED) {
 						}
 
 						var update = function (data) {
+							//console.log("update",data)
 							var main = document.getElementById("statra_svg_" + $scope.unique);
 							if (!main) {
 								$scope.timeout = setTimeout(update.bind(null, data), 40);
@@ -962,6 +975,8 @@ module.exports = function (RED) {
 								return
 							}
 							var g = document.getElementById("statra_legend_" + $scope.unique);
+							var strip = document.getElementById("statra_" + $scope.unique);
+							//console.log(strip)
 							if (!g) {
 								return
 							}
@@ -979,7 +994,7 @@ module.exports = function (RED) {
 
 									rect = document.createElementNS($scope.svgns, 'rect');
 									rect.setAttributeNS(null, 'x', xp);
-									rect.setAttributeNS(null, 'y', '28%');
+									rect.setAttributeNS(null, 'y', $scope.sizes.leg+'%');
 									rect.setAttributeNS(null, 'height', '11');
 									rect.setAttributeNS(null, 'width', '8');
 									rect.setAttributeNS(null, 'fill', legend[i].col);
@@ -989,7 +1004,7 @@ module.exports = function (RED) {
 
 									txt = document.createElementNS($scope.svgns, 'text');
 									txt.setAttributeNS(null, 'x', xp);
-									txt.setAttributeNS(null, 'y', '28%');
+									txt.setAttributeNS(null, 'y', $scope.sizes.leg+'%');
 									txt.setAttributeNS(null, 'dominant-baseline', 'hanging');
 									txt.setAttributeNS(null, 'fill', legend[i].col)
 									txt.setAttribute('class', 'txt-' + $scope.unique + ' small')
