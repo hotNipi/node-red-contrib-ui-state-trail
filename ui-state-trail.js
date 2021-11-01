@@ -56,7 +56,7 @@ module.exports = function (RED) {
 					</linearGradient>	
 				</defs>
 				<text ng-if="${config.height > 1}">
-					<tspan  ng-if="${config.legend > 0}" id="statra_label_{{unique}}" class="txt-{{unique}}" text-anchor="middle" dominant-baseline="hanging" x=` + config.exactwidth / 2 + ` y="4%">
+					<tspan  ng-if="${config.legend > 0}" id="statra_label_{{unique}}" class="txt-{{unique}}" text-anchor="middle" dominant-baseline="hanging" x=` + config.exactwidth / 2 + ` y="1%">
 						` + config.label + `
 					</tspan>
 					<tspan  ng-if="${config.legend == 0}" id="statra_label_{{unique}}" class="txt-{{unique}}" text-anchor="middle" dominant-baseline="middle" x=` + config.exactwidth / 2 + ` y="25%">
@@ -79,7 +79,7 @@ module.exports = function (RED) {
 					class="txt-{{unique}} small" text-anchor="middle" dominant-baseline="baseline" y="${config.stripe.tybt}%"></text>
 				
 				<line ng-repeat="x in [].constructor(${config.tickmarks}) track by $index" id=statra_tick_{{unique}}_{{$index}}
-					visibility="hidden" x1="0" y1="${config.stripe.tyt}%" x2="0" y2="${config.stripe.tyb}%" 
+					visibility="hidden" x1="0" y1="${config.stripe.tyt}" x2="0" y2="${config.stripe.tyb}" 
 					style="stroke:currentColor;stroke-width:1" />				
 			</svg>`
 		return String.raw`${styles}${layout}`;
@@ -719,25 +719,23 @@ module.exports = function (RED) {
 					config.height = parseInt(group.config.height) || 1
 				}
 				config.width = parseInt(config.width)
-				config.height = parseInt(config.height) //> 2 ? 2 : parseInt(config.height)
+				config.height = parseInt(config.height)
 				config.exactwidth = parseInt(site.sizes.sx * config.width + site.sizes.cx * (config.width - 1)) - 12;
 				config.exactheight = parseInt(site.sizes.sy * config.height + site.sizes.cy * (config.height - 1)) - 12;
 
-				var sh = (site.sizes.sy / 2) - 6
-				if (config.height > 2){
-					sh += (config.height - 2) * (site.sizes.sy)
-				}
+				var sh = (site.sizes.sy / 2) + (site.sizes.cy * (config.height - 1)) - 6
+				 if (config.height > 2){
+					sh += ((config.height - 2) * (site.sizes.sy)) - (config.height - 2) * 3
+				} 
 				var sy = config.height == 1 ? 0 : Math.floor(1/config.height*100)
 				if(config.height > 2){
 					sy += site.sizes.cx 
-				} // ' 100// == 1 ? 0 : 50
-				var shp = 100 * sh / config.exactheight
-				
-				var tyt = sy + shp + (100 / config.exactheight)
+				} 
 				var leg = sy - (100 * 18 / config.exactheight)
-				var dot = sy - (100 * 6 / config.exactheight)
-				var tyb = tyt + (100 * 5 / config.exactheight)
-				var tybt = tyb + (100 * 12 / config.exactheight)
+				var dot = sy - (100 * 6 / config.exactheight)				
+				var tyb = config.exactheight - (site.sizes.sy/10) 
+				var tyt = tyb - 5
+				var tybt = 99.5
 				var edge = Math.max(config.timeformat.length, 6) * 4 * 100 / config.exactwidth
 				config.stripe = {
 					height: sh,
