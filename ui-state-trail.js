@@ -370,7 +370,9 @@ module.exports = function (RED) {
 							storage = []
 							val.forEach(s => addToStore(s))
 							references = []
-							ref.forEach(r => addToRef(r))
+							if(ref){
+								ref.forEach(r => addToRef(r))
+							}							
 						}
 					} else {
 						addToStore(val)
