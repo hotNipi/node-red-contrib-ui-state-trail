@@ -368,6 +368,7 @@ module.exports = function (RED) {
 							return
 						} else {
 							storage = []
+							val = val.sort((a, b) => a.timestamp - b.timestamp)
 							val.forEach(s => addToStore(s))
 							references = []
 							if(ref){
@@ -797,8 +798,12 @@ module.exports = function (RED) {
 					storeFrontEndInputAsState: true,
 
 					beforeEmit: function (msg) {
+						
 						if (msg.control && msg.control.period) {
 							config.period = parseInt(msg.control.period)
+						}
+						if (msg.control && msg.control.label) {							
+							config.label = msg.control.label
 						}
 						if (msg.control && msg.control.states) {
 							if (isValidStateConf(msg.control.states)) {
@@ -819,8 +824,10 @@ module.exports = function (RED) {
 							ticks: generateTicks(),
 							legend: collectSummary(),
 							splits: splitters,
-							dots: dots
+							dots: dots,
+							label:config.label
 						}
+						
 						return {
 							msg
 						};
@@ -900,7 +907,18 @@ module.exports = function (RED) {
 							updateLegend(data.legend)
 							updateSplitters(data.splits)
 							updateDots(data.dots)
+							updateLabel(data.label)
 							updateBlankLabel()
+						}
+						
+						var updateLabel = function(label){
+							if(!label){
+								return
+							}
+							var el = document.getElementById("statra_label_" + $scope.unique);
+							if (el) {
+								$(el).text(label)
+							}
 						}
 
 						var updateBlankLabel = function () {
