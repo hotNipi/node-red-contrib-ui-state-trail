@@ -167,6 +167,15 @@ For example to set period to 5 minutes, send
 msg.control = {period:300000}
 ```
 
+### Change widget label
+Configured label can be overrided by using <code>control.label</code> property.
+The value can be any string. 
+
+Example
+``` javascript
+msg.control = {label:"State Trail"}
+```
+
 ### Change the states
 
 All states can be overrided by using <code>control.states</code> property. Note that you can't adjust or change any of configured states individually.
