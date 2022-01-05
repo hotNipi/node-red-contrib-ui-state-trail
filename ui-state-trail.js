@@ -368,6 +368,7 @@ module.exports = function (RED) {
 							return
 						} else {
 							storage = []
+							val = val.sort((a, b) => a.timestamp - b.timestamp)
 							val.forEach(s => addToStore(s))
 							references = []
 							if(ref){
@@ -847,6 +848,11 @@ module.exports = function (RED) {
 
 						$scope.init = function (data, sizes) {
 							$scope.sizes = sizes
+							//console.log('initial data',data.stops.length,data.legend.length)
+							if(data.stops.length == 0 && data.legend.length == 0){
+								updateBlankLabel()
+								return
+							}
 							update(data)
 						}
 
@@ -887,9 +893,10 @@ module.exports = function (RED) {
 						}
 
 						var update = function (data) {
-							//console.log("update",data)
+							//console.log("update",$scope.unique,data)
 							var main = document.getElementById("statra_svg_" + $scope.unique);
 							if (!main) {
+								//console.log('no main',$scope.unique)
 								$scope.timeout = setTimeout(update.bind(null, data), 40);
 								return
 							}
@@ -1034,6 +1041,7 @@ module.exports = function (RED) {
 						}
 
 						var updateGradient = function (stops) {
+							//console.log('update gradient',stops.length)
 							var gradient = document.getElementById("statra_gradi_" + $scope.unique);
 							var stop
 							$scope.mouselock = stops.length
@@ -1076,6 +1084,7 @@ module.exports = function (RED) {
 								return;
 							}
 							if (msg.payload) {
+								//console.log('msg',$scope.unique,msg.payload)
 								update(msg.payload)
 							}
 						});
