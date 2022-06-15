@@ -572,7 +572,7 @@ module.exports = function (RED) {
 					var po
 					var t
 					var vis
-					if (config.exact-ticks){
+					if (config.exactticks){
 						for (let i = 0; i < storage.length; i++) {
 							t = storage[i].timestamp						
 							po = getPosition(t, config.insidemin, config.max)							
