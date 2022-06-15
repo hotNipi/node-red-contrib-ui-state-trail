@@ -53,6 +53,12 @@ SOFTWARE.
     <label for='node-input-tickmarks' style='width:33px'>Ticks</label>
     <input type='number' id='node-input-tickmarks' min='2' max='25' value='4' size='1' style='width:47px' >
 </div>
+<div class='form-row' id='node-input-exact-time-ticks'>
+    <label for='node-input-exact-ticks'><i class='icon-tag'></i> Exact Time Ticks</label>
+    <input type="checkbox" id="node-input-exact-ticks" 
+            style="display:inline-block; width:auto; vertical-align:baseline; 
+            margin-right:5px;margin-left:5px;">Marks the state changes with exact time ticks (ticks count will be ignored)
+</div>
 <div class="form-row" style="margin-bottom:0;">
     <label><i class="fa fa-list"></i> States:</label>
     <span id="configError" style="color:#DD0000"><b>All Values must be unique.</b></span>
@@ -78,7 +84,7 @@ SOFTWARE.
             margin-right:5px;margin-left:5px;">Use persistable storage if available
 </div>
 <div class='form-row' id='node-input-performance'>
-    <label for='node-input-persist'><i class='icon-tag'></i> Performance</label>
+    <label for='node-input-combine'><i class='icon-tag'></i> Performance</label>
     <input type="checkbox" checked id="node-input-combine" 
             style="display:inline-block; width:auto; vertical-align:baseline; 
             margin-right:5px;margin-left:5px;">Combine similar states
@@ -463,8 +469,8 @@ SOFTWARE.
         
 
     <h2>Time format and Ticks</h2>
-    <p>Choose format of time and count of tick marks.
-     
+    <p>Choose format of time and count of tick marks. If the "Exact Ticks" is selected, the state change will be marked with the exact time and the ticks count will be ignored.
+    
     <h2>States</h2>
     <p>Configure at least 2 states. Type of state can be <code>string</code>, <code>number</code> or <code>boolean</code>.  
         States can be configured with mixing the types. States <code>true</code> (boolean) and <code>"true"</code> (string) treated as different states. 

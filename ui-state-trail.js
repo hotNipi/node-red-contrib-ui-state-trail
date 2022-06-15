@@ -572,20 +572,35 @@ module.exports = function (RED) {
 					var po
 					var t
 					var vis
-					var total = config.max - config.insidemin
-					var step = (total / (config.tickmarks - 1))					
-					for (let i = 0; i < config.tickmarks; i++) {
-						t = storage[1].timestamp + (step * i)						
-						po = getPosition(t, config.insidemin, config.max)							
-						vis = ret.find(el => el.x == po) ? "hidden" : "visible" 				
-						o = {
-							x: po,
-							v: formatTime(t),
-							id: i,
-							vis:vis
-						}
-						ret.push(o)
-					}					
+					if (config.exact-ticks){
+						for (let i = 0; i < storage.length; i++) {
+							t = storage[i].timestamp						
+							po = getPosition(t, config.insidemin, config.max)							
+							vis = ret.find(el => el.x == po) ? "hidden" : "visible" 				
+							o = {
+								x: po,
+								v: formatTime(t),
+								id: i,
+								vis:vis
+							}
+							ret.push(o)
+						}	
+					} else {
+						var total = config.max - config.insidemin
+						var step = (total / (config.tickmarks - 1))	
+						for (let i = 0; i < config.tickmarks; i++) {
+							t = storage[1].timestamp + (step * i)						
+							po = getPosition(t, config.insidemin, config.max)							
+							vis = ret.find(el => el.x == po) ? "hidden" : "visible" 				
+							o = {
+								x: po,
+								v: formatTime(t),
+								id: i,
+								vis:vis
+							}
+							ret.push(o)
+						}		
+					}
 					return ret
 				}
 
