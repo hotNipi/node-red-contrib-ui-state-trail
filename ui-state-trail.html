@@ -146,6 +146,7 @@ SOFTWARE.
             periodLimitUnit: {value: '3600',required: true},
             timeformat: {value: 'HH:mm:ss'},
             tickmarks: {val: 4, required: true},
+            exactticks: {val: false, required: true},
             persist: {val: false, required: true},
             legend: {
                 value: 1,
@@ -197,6 +198,10 @@ SOFTWARE.
             if (this.tickmarks === undefined) {
                 this.tickmarks = 4;
                 $('#node-input-tickmarks').val('4');
+            }
+
+            if (this.exactticks === undefined) {
+                $('#node-input-exactticks').prop('checked', false);
             }
 
             if (this.legend === undefined) {
