@@ -74,13 +74,10 @@ module.exports = function (RED) {
 				<g class="statra-{{unique}} split" id="statra_splitters_{{unique}}" ng-if="${!config.combine}" 
 					style="outline: none; border: 0;" ></g>
 				<g class="statra-{{unique}} split" id="statra_dots_{{unique}}" 
-					style="outline: none; border: 0;"></g>		
-				<text ng-repeat="x in [].constructor(${config.tickmarks}) track by $index" id=statra_tickval_{{unique}}_{{$index}} 
-					class="txt-{{unique}} small" text-anchor="middle" dominant-baseline="baseline" y="${config.stripe.tybt}%"></text>
-				
-				<line ng-repeat="x in [].constructor(${config.tickmarks}) track by $index" id=statra_tick_{{unique}}_{{$index}}
-					visibility="hidden" x1="0" y1="${config.stripe.tyt}" x2="0" y2="${config.stripe.tyb}" 
-					style="stroke:currentColor;stroke-width:1" />				
+					style="outline: none; border: 0;"></g>
+				<g class="statra-{{unique}} ticks" id="statra_ticks_{{unique}}" 
+					style="outline: none; border: 0;"></g>			
+								
 			</svg>`
 		return String.raw`${styles}${layout}`;
 	}
@@ -575,7 +572,7 @@ module.exports = function (RED) {
 					if (config.exactticks){
 						for (let i = 0; i < storage.length; i++) {
 							t = storage[i].timestamp						
-							po = getPosition(t, config.insidemin, config.max)							
+							po = getPosition(t, config.insidemin, config.max)					
 							vis = ret.find(el => el.x == po) ? "hidden" : "visible" 				
 							o = {
 								x: po,
@@ -1090,25 +1087,68 @@ module.exports = function (RED) {
 								}
 							}
 						}
-
 						var updateTicks = function (times) {
-							var len = times.length
-							for (let i = 0; i < len; i++) {
-								var tick = document.getElementById("statra_tick_" + $scope.unique + "_" + times[i].id);
-								if (tick) {
-									$(tick).attr('x1', times[i].x + "%");
-									$(tick).attr('x2', times[i].x + "%");
-									
-									$(tick).attr('visibility', times[i].vis)
-									
-								}
-								tick = document.getElementById("statra_tickval_" + $scope.unique + "_" + times[i].id);
-								if (tick) {
-									$(tick).text(times[i].v);
-									$(tick).attr('x', times[i].x + "%");
-									$(tick).attr('visibility', times[i].vis)
+							var len = times.length						
+							var g = document.getElementById("statra_ticks_" + $scope.unique);
+							if (!g) {
+								return
+							}
+							if (g.children.length > 0) {
+								while (g.firstChild) {
+									g.removeChild(g.firstChild);
 								}
 							}
+							var tick
+							var txt
+
+							for (let i = 0; i < len; i++) {
+								tick = document.createElementNS($scope.svgns, 'line');
+								tick.setAttribute('id', 'statra_tick_' + $scope.unique + "_" + i)
+								tick.setAttributeNS(null, 'x1', times[i].x + "%");
+								tick.setAttributeNS(null, 'x2', times[i].x + "%");
+								tick.setAttributeNS(null, 'y1', $scope.sizes.tyt);
+								tick.setAttributeNS(null, 'y2', $scope.sizes.tyb);
+								tick.setAttributeNS(null, 'style', "stroke:currentColor;stroke-width:1");
+								tick.setAttributeNS(null, 'visibility', 'visible');
+								g.appendChild(tick);
+
+								txt = document.createElementNS($scope.svgns, 'text');
+								txt.setAttribute('id', 'statra_tickval_' + $scope.unique + "_" + i)
+								txt.setAttributeNS(null, 'x', times[i].x + "%");
+								txt.setAttributeNS(null, 'y', $scope.sizes.tybt + "%");
+								txt.setAttributeNS(null, 'dominant-baseline', 'baseline');
+								txt.setAttributeNS(null, 'text-anchor', 'middle');								
+								txt.setAttribute('class', 'txt-' + $scope.unique + ' small statra_tickval_' + $scope.unique)
+								txt.setAttributeNS(null, 'visibility', 'visible');
+								
+								txt.textContent = times[i].v
+								g.appendChild(txt);
+							}
+
+							let values = document.querySelectorAll('.statra_tickval_'+ $scope.unique)
+							let rectas = []
+							Array.from(values).forEach((el,i) => {								
+								rectas.push({box:el.getBoundingClientRect()})
+							})
+							let last = 0
+							rectas.forEach((r,i) => {
+								if(last > r.box.left){
+									var tick = document.getElementById("statra_tick_" + $scope.unique + "_" + i);								
+									if (tick ) {
+										$(tick).attr('visibility', 'hidden')
+									}
+									tick = document.getElementById("statra_tickval_" + $scope.unique + "_" + i);
+									if (tick) {
+										$(tick).attr('visibility', 'hidden')
+									}									
+								}
+								else{
+									last = r.box.right
+								}
+								if(last == 0){
+									last = r.box.right
+								}							
+							})	
 						}
 
 						$scope.$watch('msg', function (msg) {
