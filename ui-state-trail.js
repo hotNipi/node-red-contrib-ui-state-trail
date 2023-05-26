@@ -41,20 +41,25 @@ module.exports = function (RED) {
 				cursor:pointer;
 			}
 			.statra-{{unique}}.split{
-				fill:${config.bgrColor};
-				
-				outline: none;
-				stroke:none;
-				border: 0
+				position:absolute;
+				width:${config.exactwidth}px;
+				top:${config.stripe.y}%;
+			}
+			.statra-{{unique}}.split .splitter{
+				position:absolute;				
+				height:${config.stripe.height}px;
+				border-left:1px solid ${config.bgrColor};
+			}
+			.statra-gradi-{{unique}}{
+				width:${config.exactwidth}px;
+				height:${config.stripe.height}px;
+				position:absolute;
+				top:${config.stripe.y}%;
 			}								
 		</style>`
-		var gradient = String.raw`fill="url(#statra_gradi_{{unique}})"`
+
 		var layout = String.raw`		
-			<svg preserveAspectRatio="xMidYMid meet" id="statra_svg_{{unique}}" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg" ng-init='init(` + data + `,` + sizes + `)'>
-				<defs>
-					<linearGradient id="statra_gradi_{{unique}}" x2="100%" y2="0%">					
-					</linearGradient>	
-				</defs>
+			<svg preserveAspectRatio="xMidYMid meet" id="statra_svg_{{unique}}" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg" ng-init='init(` + data + `,` + sizes + `)'>				
 				<text ng-if="${config.height > 1}">
 					<tspan  ng-if="${config.legend > 0}" id="statra_label_{{unique}}" class="txt-{{unique}}" text-anchor="middle" dominant-baseline="hanging" x=` + config.exactwidth / 2 + ` y="1%">
 						` + config.label + `
@@ -69,21 +74,18 @@ module.exports = function (RED) {
 					<tspan id="statra_blank_{{unique}}" class="txt-{{unique}}" text-anchor="middle" dominant-baseline="hanging" 
 						x=` + config.exactwidth / 2 + ` y="` + config.stripe.y + `%">` + config.blanklabel + `</tspan>
 				</text>				
-				<rect id="statra_{{unique}}" ng-click='onClick($event)' x="` + config.stripe.x + `" y="` + config.stripe.y + `%"
-					width="` + config.exactwidth + `" height="` + config.stripe.height + `" style="stroke:none; outline: none; cursor:pointer;" ${gradient}/>	
-				<g class="statra-{{unique}} split" id="statra_splitters_{{unique}}" ng-if="${!config.combine}" 
-					style="outline: none; border: 0;" ></g>
 				<g class="statra-{{unique}} split" id="statra_dots_{{unique}}" 
-					style="outline: none; border: 0;"></g>		
-				<text ng-repeat="x in [].constructor(${config.tickmarks}) track by $index" id=statra_tickval_{{unique}}_{{$index}} 
-					class="txt-{{unique}} small" text-anchor="middle" dominant-baseline="baseline" y="${config.stripe.tybt}%"></text>
-				
-				<line ng-repeat="x in [].constructor(${config.tickmarks}) track by $index" id=statra_tick_{{unique}}_{{$index}}
-					visibility="hidden" x1="0" y1="${config.stripe.tyt}" x2="0" y2="${config.stripe.tyb}" 
-					style="stroke:currentColor;stroke-width:1" />				
-			</svg>`
+					style="outline: none; border: 0;"></g>
+				<g class="statra-{{unique}} ticks" id="statra_ticks_{{unique}}" 
+					style="outline: none; border: 0;"></g>								
+			</svg>
+
+			<div class="statra-gradi-{{unique}}" id=statra_gradi_{{unique}} ng-click='onClick($event)'></div>
+			<div class="statra-{{unique}} split" id="statra_splitters_{{unique}}" ng-if="${!config.combine}"></div>`
+		
 		return String.raw`${styles}${layout}`;
 	}
+
 
 	function checkConfig(node, conf) {
 		if (!conf || !conf.hasOwnProperty("group")) {
@@ -498,9 +500,9 @@ module.exports = function (RED) {
 					if (storage.length < 2) {
 						return ret
 					}
-					var o = {p: 0, c: getColor(storage[0].state),a: 0}
+					var o = {p: 0, c: getColor(storage[0].state)}
 					ret.push(o)
-					o = {p: config.stripe.left,	c: getColor(storage[0].state),a: 1}
+					o = {p: config.stripe.left,	c: getColor(storage[0].state)}
 					ret.push(o)
 					var i
 					var po
@@ -509,17 +511,17 @@ module.exports = function (RED) {
 						if (isNaN(po)) {
 							continue
 						}
-						o = {p: po,	c: getColor(storage[i - 1].state),	a: 1}
+						o = {p: po,	c: getColor(storage[i - 1].state)}
 						ret.push(o)
-						o = {p: po,	c: getColor(storage[i].state),	a: 1}
+						o = {p: po,	c: getColor(storage[i].state)}
 						ret.push(o)
 						po = getPosition(storage[i + 1].timestamp, config.insidemin, config.max)
 					}
-					o = {p: config.stripe.right,c: getColor(storage[storage.length - 2].state),	a: 1}
+					o = {p: config.stripe.right,c: getColor(storage[storage.length - 2].state)}
 					ret.push(o)
-					o = {p: config.stripe.right,c: getColor(storage[storage.length - 1].state),a: 1}
+					o = {p: config.stripe.right,c: getColor(storage[storage.length - 1].state)}
 					ret.push(o)
-					o = {p: 100,c: getColor(storage[storage.length - 1].state),a: 0}
+					o = {p: 100,c: getColor(storage[storage.length - 1].state)}
 					ret.push(o)
 					if (!config.combine) {
 						findSplitters()
@@ -572,20 +574,35 @@ module.exports = function (RED) {
 					var po
 					var t
 					var vis
-					var total = config.max - config.insidemin
-					var step = (total / (config.tickmarks - 1))					
-					for (let i = 0; i < config.tickmarks; i++) {
-						t = storage[1].timestamp + (step * i)						
-						po = getPosition(t, config.insidemin, config.max)							
-						vis = ret.find(el => el.x == po) ? "hidden" : "visible" 				
-						o = {
-							x: po,
-							v: formatTime(t),
-							id: i,
-							vis:vis
-						}
-						ret.push(o)
-					}					
+					if (config.exactticks){
+						for (let i = 0; i < storage.length; i++) {
+							t = storage[i].timestamp						
+							po = getPosition(t, config.insidemin, config.max)					
+							vis = ret.find(el => el.x == po) ? "hidden" : "visible" 				
+							o = {
+								x: po,
+								v: formatTime(t),
+								id: i,
+								vis:vis
+							}
+							ret.push(o)
+						}	
+					} else {
+						var total = config.max - config.insidemin
+						var step = (total / (config.tickmarks - 1))	
+						for (let i = 0; i < config.tickmarks; i++) {
+							t = storage[1].timestamp + (step * i)						
+							po = getPosition(t, config.insidemin, config.max)							
+							vis = ret.find(el => el.x == po) ? "hidden" : "visible" 				
+							o = {
+								x: po,
+								v: formatTime(t),
+								id: i,
+								vis:vis
+							}
+							ret.push(o)
+						}		
+					}
 					return ret
 				}
 
@@ -959,12 +976,9 @@ module.exports = function (RED) {
 							}
 							var split
 							for (var i = 0; i < splits.length; i++) {
-								split = document.createElementNS($scope.svgns, 'rect');
-								split.setAttribute('id', 'statra_split_' + $scope.unique + "_" + i)
-								split.setAttribute('x', splits[i].x + '%');
-								split.setAttribute('y', $scope.sizes.y + '%');
-								split.setAttribute('width', splits[i].width);
-								split.setAttribute('height', $scope.sizes.height + 1);
+								split = document.createElement('div')
+								split.className = 'splitter';
+								split.style.left = splits[i].x + '%'
 								document.getElementById("statra_splitters_" + $scope.unique).appendChild(split);
 							}
 						}
@@ -999,8 +1013,6 @@ module.exports = function (RED) {
 								return
 							}
 							var g = document.getElementById("statra_legend_" + $scope.unique);
-							var strip = document.getElementById("statra_" + $scope.unique);
-							//console.log(strip)
 							if (!g) {
 								return
 							}
@@ -1058,42 +1070,104 @@ module.exports = function (RED) {
 						}
 
 						var updateGradient = function (stops) {
-							//console.log('update gradient',stops.length)
 							var gradient = document.getElementById("statra_gradi_" + $scope.unique);
-							var stop
 							$scope.mouselock = stops.length
 							if (gradient) {
-								while (gradient.childNodes.length > 0) {
-									gradient.removeChild(gradient.firstChild)
+								const perChunk = 9
+      							const result = stops.reduce((resultArray, item, index) => {
+										const chunkIndex = Math.floor(index/perChunk)									
+										if(!resultArray[chunkIndex]) {
+											resultArray[chunkIndex] = [] // start a new chunk
+										}									
+										resultArray[chunkIndex].push(item)									
+										return resultArray
+									}, []
+								)
+
+								function getBgr(inp){
+									let bg = "linear-gradient(to right, "
+									let last = 0									
+									inp.forEach(e => {
+										bg += e.c+" "+e.p+"%"+ ", "
+										last = e.p
+									})
+									bg +="transparent "+last+"%"
+									
+									bg += "), ";
+									return bg
 								}
-								for (let i = 0; i < stops.length; i++) {
-									stop = document.createElementNS($scope.svgns, 'stop');
-									stop.setAttribute('offset', stops[i].p + "%");
-									stop.setAttribute('stop-color', stops[i].c);
-									stop.setAttribute('stop-opacity', stops[i].a);
-									gradient.appendChild(stop);
-								}
+
+								let bgrstring = ""
+								result.forEach(e => {
+									bgrstring += getBgr(e)
+								})
+
+								bgrstring = bgrstring.slice(0, -2);
+								gradient.style.background = bgrstring
 							}
 						}
-
 						var updateTicks = function (times) {
-							var len = times.length
-							for (let i = 0; i < len; i++) {
-								var tick = document.getElementById("statra_tick_" + $scope.unique + "_" + times[i].id);
-								if (tick) {
-									$(tick).attr('x1', times[i].x + "%");
-									$(tick).attr('x2', times[i].x + "%");
-									
-									$(tick).attr('visibility', times[i].vis)
-									
-								}
-								tick = document.getElementById("statra_tickval_" + $scope.unique + "_" + times[i].id);
-								if (tick) {
-									$(tick).text(times[i].v);
-									$(tick).attr('x', times[i].x + "%");
-									$(tick).attr('visibility', times[i].vis)
+							var len = times.length						
+							var g = document.getElementById("statra_ticks_" + $scope.unique);
+							if (!g) {
+								return
+							}
+							if (g.children.length > 0) {
+								while (g.firstChild) {
+									g.removeChild(g.firstChild);
 								}
 							}
+							var tick
+							var txt
+
+							for (let i = 0; i < len; i++) {
+								tick = document.createElementNS($scope.svgns, 'line');
+								tick.setAttribute('id', 'statra_tick_' + $scope.unique + "_" + i)
+								tick.setAttributeNS(null, 'x1', times[i].x + "%");
+								tick.setAttributeNS(null, 'x2', times[i].x + "%");
+								tick.setAttributeNS(null, 'y1', $scope.sizes.tyt);
+								tick.setAttributeNS(null, 'y2', $scope.sizes.tyb);
+								tick.setAttributeNS(null, 'style', "stroke:currentColor;stroke-width:1");
+								tick.setAttributeNS(null, 'visibility', 'visible');
+								g.appendChild(tick);
+
+								txt = document.createElementNS($scope.svgns, 'text');
+								txt.setAttribute('id', 'statra_tickval_' + $scope.unique + "_" + i)
+								txt.setAttributeNS(null, 'x', times[i].x + "%");
+								txt.setAttributeNS(null, 'y', $scope.sizes.tybt + "%");
+								txt.setAttributeNS(null, 'dominant-baseline', 'baseline');
+								txt.setAttributeNS(null, 'text-anchor', 'middle');								
+								txt.setAttribute('class', 'txt-' + $scope.unique + ' small statra_tickval_' + $scope.unique)
+								txt.setAttributeNS(null, 'visibility', 'visible');
+								
+								txt.textContent = times[i].v
+								g.appendChild(txt);
+							}
+
+							let values = document.querySelectorAll('.statra_tickval_'+ $scope.unique)
+							let rectas = []
+							Array.from(values).forEach((el,i) => {								
+								rectas.push({box:el.getBoundingClientRect()})
+							})
+							let last = 0
+							rectas.forEach((r,i) => {
+								if(last > r.box.left){
+									var tick = document.getElementById("statra_tick_" + $scope.unique + "_" + i);								
+									if (tick ) {
+										$(tick).attr('visibility', 'hidden')
+									}
+									tick = document.getElementById("statra_tickval_" + $scope.unique + "_" + i);
+									if (tick) {
+										$(tick).attr('visibility', 'hidden')
+									}									
+								}
+								else{
+									last = r.box.right+2
+								}
+								if(last == 0){
+									last = r.box.right
+								}							
+							})	
 						}
 
 						$scope.$watch('msg', function (msg) {
